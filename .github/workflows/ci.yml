@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  banned-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash eng/check-banned-packages.sh
+
+  backend:
+    runs-on: ubuntu-latest # Docker je preinstaliran -> Testcontainers (SQL Server) radi
+    needs: banned-packages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          dotnet-version: 10.0.x
+      - run: dotnet restore ExcelImporter.slnx
+      - run: dotnet build ExcelImporter.slnx --no-restore -c Release
+      - name: Test + pokrivenost
+        run: |
+          dotnet tool install --global dotnet-coverage
+          dotnet-coverage collect -f cobertura -o coverage/backend.cobertura.xml \
+            "dotnet test --solution ExcelImporter.slnx --no-build -c Release"
+      - name: Gate pokrivenosti (Domain + Application >= 80%)
+        run: pwsh eng/check-coverage.ps1 -Path coverage -Threshold 80
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: coverage/
+          if-no-files-found: warn
+
+  frontend:
+    runs-on: ubuntu-latest
+    needs: banned-packages
+    defaults:
+      run:
+        working-directory: src/ExcelImporter.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/ExcelImporter.Web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
