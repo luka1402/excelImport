@@ -1,0 +1,88 @@
+﻿.shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.indicator ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepCurrent {
+  font-weight: 700;
+  border-bottom: 3px solid var(--color-primary);
+}
+
+.stepFuture {
+  color: var(--color-muted);
+}
+
+.stepLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.compact {
+  display: none;
+}
+
+.content h1 {
+  margin-top: 0;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.next {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.next p {
+  margin: 0.25rem 0 0;
+  color: var(--color-muted);
+}
+
+@media (width < 1024px) {
+  .indicator ol {
+    display: none;
+  }
+
+  .compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+@media (width < 640px) {
+  .footer {
+    position: sticky;
+    bottom: 0;
+    flex-direction: column-reverse;
+    background: var(--color-bg);
+  }
+
+  .footer button,
+  .next {
+    width: 100%;
+    min-height: 44px;
+    align-items: stretch;
+  }
+}

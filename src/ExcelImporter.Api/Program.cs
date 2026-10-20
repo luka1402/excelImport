@@ -1,6 +1,24 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+using ExcelImporter.Api;
+using ExcelImporter.Api.Configuration;
+using ExcelImporter.Api.Health;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.AddApiFoundation();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+app.UseCors(CorsOptions.PolicyName);
+
+if (app.Services.GetRequiredService<IOptions<OpenApiSettings>>().Value.Enabled)
+{
+    app.MapOpenApi();
+}
+
+app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthResponseWriter.WriteAsync });
 
 app.Run();
 

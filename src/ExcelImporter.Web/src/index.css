@@ -1,0 +1,36 @@
+﻿:root {
+  --color-bg: #ffffff;
+  --color-text: #1b1f24;
+  --color-muted: #50575f;
+  --color-primary: #0b57d0;
+  --color-border: #8a9099;
+  --color-error: #b3261e;
+  --color-error-bg: #fdecea;
+  --color-error-text: #5f1410;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 100%;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+body {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+button {
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

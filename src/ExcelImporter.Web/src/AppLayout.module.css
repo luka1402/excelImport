@@ -1,0 +1,11 @@
+﻿.header {
+  padding: 1rem 1.5rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
