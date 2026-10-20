@@ -64,7 +64,7 @@ Korak 8 (šabloni) nije poseban ekran u toku, već: izbor šablona na početku (
 |                                                                          |
 |  +--------------------------------------------------------------------+  |
 |  |        ⇪  Prevucite fajl ovde ili [Izaberite fajl]                 |  |
-|  |        Dozvoljeno: .xlsx, .xls — najviše 50 MB                     |  |
+|  |        Dozvoljeno: .xlsx — najviše 50 MB                          |  |
 |  +--------------------------------------------------------------------+  |
 |                                                                          |
 |  Izabrani fajl: prodaja_2026.xlsx (2,3 MB)   [Ukloni]                    |
@@ -75,7 +75,7 @@ Korak 8 (šabloni) nije poseban ekran u toku, već: izbor šablona na početku (
 ```
 - **Učitavanje:** traka napretka otpremanja sa procentom; zona za prevlačenje onemogućena; „Otkaži" prekida zahtev.
 - **Greška** (klijentska provera pre slanja i serverska posle):
-  - „Fajl nije u podržanom formatu. Dozvoljeni su .xlsx i .xls."
+  - „Fajl nije u podržanom formatu. Dozvoljen je samo .xlsx."
   - „Fajl je prevelik (najviše 50 MB)."
   - „Fajl je prazan."
   - „Fajl ne može da se pročita. Moguće je da je oštećen ili zaštićen lozinkom."
@@ -255,7 +255,7 @@ Operatori (srpski nazivi): je jednako, nije jednako, veće od, manje od, veće i
 |                ( ) Preskoči neispravne — ispravni se upisuju, neispravni |
 |                    se vraćaju u izveštaj.                                |
 +--------------------------------------------------------------------------+
-| [← Nazad]                                      [Pokreni uvoz]            |
+| [← Nazad]                       [Sačuvaj kao šablon]     [Pokreni uvoz]  |
 +--------------------------------------------------------------------------+
 ```
 - Ako ima grešaka a izabrano je „Sve ili ništa": žuta napomena „⚠ Uvoz će biti odbijen jer postoje redovi sa greškom." i dugme `[Pokreni uvoz]` ostaje dostupno (korisnik odlučuje) ali sa potvrdom.
@@ -388,24 +388,77 @@ Centralizovati u jednom fajlu (npr. `src/messages.sr.ts`), bez teksta u komponen
 | `nav.retry` | Pokušaj ponovo |
 | `nav.newImport` | Novi uvoz |
 | `nav.confirmReset` | Promena će poništiti mapiranje i pravila iz narednih koraka. Nastaviti? |
+| `nav.confirm` | Nastavi |
 | `nav.disabledReason.file` | Izaberite fajl da biste nastavili. |
+| `nav.disabledReason.uploading` | Sačekajte da se otpremanje fajla završi. |
+| `nav.disabledReason.analysis` | Sačekajte da se analiza fajla završi. |
+| `nav.disabledReason.analysisSheet` | Izaberite sheet koji sadrži podatke da biste nastavili. |
+| `nav.disabledReason.target` | Izaberite bazu i tabelu da biste nastavili. |
+| `nav.disabledReason.mappingNone` | Povežite bar jednu kolonu da biste nastavili. |
+| `nav.disabledReason.mappingRequired` | Mapirajte obaveznu kolonu „{name}" ili unesite konstantu da biste nastavili. |
+| `nav.disabledReason.mappingConstant` | Ispravite vrednost konstante da biste nastavili. |
+| `nav.disabledReason.rules` | Ispravite ili otkažite pravilo koje uređujete da biste nastavili. |
+| `nav.disabledReason.dryrunLoading` | Sačekajte da se provera redova završi. |
+| `nav.disabledReason.dryrunNothing` | Nijedan red nije spreman za uvoz. Proverite pravila i mapiranje. |
+| `nav.disabledReason.dryrunFailed` | Provera nije uspela. Pokušajte ponovo ili se vratite na prethodni korak. |
+| `nav.disabledReason.dbDown` | Baza trenutno nije dostupna. Pokušajte ponovo. |
+| `common.close` | Zatvori |
+| `common.acknowledge` | Razumem |
+| `common.delete` | Obriši |
+| `common.save` | Sačuvaj |
+| `common.search` | Pretraga |
+| `common.actions` | Akcije |
+| `common.edit` | Izmeni |
+| `common.remove` | Ukloni |
 | `common.loading` | Učitavanje… |
 | `common.requiredField` | (obavezno) |
 | `common.details` | Detalji |
 | `upload.dropzone` | Prevucite fajl ovde ili izaberite fajl |
-| `upload.hint` | Dozvoljeno: .xlsx, .xls — najviše 50 MB |
-| `upload.err.format` | Fajl nije u podržanom formatu. Dozvoljeni su .xlsx i .xls. |
+| `upload.hint` | Dozvoljeno: .xlsx — najviše 50 MB |
+| `upload.select` | Izaberite fajl |
+| `upload.selected` | Izabrani fajl: {name} ({size}) |
+| `upload.empty` | Još niste izabrali fajl. |
+| `upload.progress` | Otpremanje: {percent} % |
+| `upload.remove` | Ukloni |
+| `upload.cancel` | Otkaži |
+| `upload.chooseAnother` | Izaberi drugi fajl |
+| `upload.err.format` | Fajl nije u podržanom formatu. Dozvoljen je samo .xlsx. |
 | `upload.err.size` | Fajl je prevelik (najviše 50 MB). |
 | `upload.err.empty` | Fajl je prazan. |
 | `upload.err.unreadable` | Fajl ne može da se pročita. Moguće je da je oštećen ili zaštićen lozinkom. |
 | `upload.err.network` | Otpremanje nije uspelo. Proverite vezu i pokušajte ponovo. |
 | `analysis.loading` | Analiziram fajl… |
 | `analysis.headerDetected` | Header je prepoznat u redu {row}. |
+| `analysis.changeRow` | Promeni red |
+| `analysis.sheet` | Sheet |
+| `analysis.headerRow` | Red sa nazivima kolona |
+| `analysis.headerRowAuto` | (automatski) |
+| `analysis.columns` | Kolone |
+| `analysis.preview` | Pregled prvih 20 redova |
+| `analysis.totalRows` | Ukupno redova: {n} |
+| `analysis.col.letter` | # |
+| `analysis.col.name` | Naziv |
+| `analysis.col.type` | Tip |
+| `analysis.col.empty` | Prazno |
+| `analysis.type.text` | Tekst |
+| `analysis.type.integer` | Ceo broj |
+| `analysis.type.date` | Datum |
 | `analysis.err.generic` | Analiza fajla nije uspela. Pokušajte ponovo ili izaberite drugi fajl. |
 | `analysis.empty.sheet` | Izabrani sheet je prazan. Izaberite drugi sheet. |
 | `analysis.empty.file` | Fajl ne sadrži podatke. |
 | `analysis.warn.duplicateHeader` | Naziv kolone se ponavlja: „{name}". |
 | `analysis.warn.noHeaderName` | Kolona {letter} nema naziv. |
+| `target.database` | Baza |
+| `target.table` | Tabela |
+| `target.searchHint` | (pretraga kucanjem) |
+| `target.columnsTitle` | Kolone tabele {table} |
+| `target.col.name` | Kolona |
+| `target.col.type` | Tip |
+| `target.col.required` | Obavezno |
+| `target.col.key` | Ključ |
+| `target.col.length` | Dužina |
+| `target.yes` | Da |
+| `target.no` | Ne |
 | `target.loadingDbs` | Učitavam listu baza… |
 | `target.loadingTables` | Učitavam tabele… |
 | `target.err.dbDown` | Baza trenutno nije dostupna. Proverite da je servis pokrenut i pokušajte ponovo. |
@@ -415,6 +468,13 @@ Centralizovati u jednom fajlu (npr. `src/messages.sr.ts`), bez teksta u komponen
 | `target.empty.search` | Nijedna tabela ne odgovara pretrazi „{query}". |
 | `mapping.suggested` | Predloženo mapiranje za {n} od {total} kolona. |
 | `mapping.acceptAll` | Prihvati sve predloge |
+| `mapping.col.excel` | Excel kolona |
+| `mapping.col.target` | Ciljna kolona |
+| `mapping.col.warning` | Upozorenje |
+| `mapping.suggestion` | Predlog |
+| `mapping.unmapped` | Nemapirane ciljne kolone |
+| `mapping.unmappedOptional` | ostaje prazno |
+| `mapping.const.label` | Konstanta |
 | `mapping.skip` | — Preskoči — |
 | `mapping.alreadyMapped` | već mapirano |
 | `mapping.warn.type` | Tip se ne poklapa: Excel „{from}", baza „{to}". |
@@ -429,6 +489,24 @@ Centralizovati u jednom fajlu (npr. `src/messages.sr.ts`), bez teksta u komponen
 | `mapping.empty.noneMapped` | Nijedna kolona nije povezana. Prihvatite predlog ili izaberite ciljne kolone. |
 | `rules.hasCondition` | Da li postoji uslov? |
 | `rules.add` | Dodaj pravilo |
+| `rules.columns` | Kolone |
+| `rules.filterRows` | Filter redova |
+| `rules.appliedOrder` | Pravila za ovu kolonu (redosled primene): |
+| `rules.edit` | Izmeni |
+| `rules.remove` | Ukloni pravilo |
+| `rules.confirmDeleteYes` | Obriši |
+| `rules.addCondition` | I još uslov |
+| `rules.if` | Ako |
+| `rules.then` | onda |
+| `rules.else` | U suprotnom |
+| `rules.optional` | (opciono) |
+| `rules.default.ifEmpty` | Ako je ćelija prazna upiši: |
+| `rules.decimalSeparator` | Decimalni separator |
+| `rules.filter.include` | Uvezi samo redove gde: |
+| `rules.filter.exclude` | Preskoči redove gde: |
+| `rules.lookup.table` | Vrednost iz ćelije traži u tabeli |
+| `rules.lookup.byColumn` | po koloni |
+| `rules.lookup.writeColumn` | i upiši |
 | `rules.type.conditional` | Uslovna vrednost |
 | `rules.type.default` | Podrazumevana vrednost |
 | `rules.type.transform` | Transformacija |
@@ -470,6 +548,11 @@ Centralizovati u jednom fajlu (npr. `src/messages.sr.ts`), bez teksta u komponen
 | `dryrun.warn.willReject` | Uvoz će biti odbijen jer postoje redovi sa greškom. |
 | `dryrun.confirm` | Upisati {n} redova u tabelu {table}? |
 | `dryrun.start` | Pokreni uvoz |
+| `dryrun.cancelCheck` | Otkaži proveru |
+| `dryrun.col.row` | Red |
+| `dryrun.col.column` | Kolona |
+| `dryrun.col.reason` | Razlog |
+| `dryrun.mode.title` | Način uvoza |
 | `dryrun.loading` | Proveravam redove… {percent} % |
 | `dryrun.err.generic` | Provera nije uspela. |
 | `dryrun.empty.nothing` | Nijedan red nije spreman za uvoz. Proverite pravila i mapiranje. |
@@ -498,6 +581,11 @@ Centralizovati u jednom fajlu (npr. `src/messages.sr.ts`), bez teksta u komponen
 | `templates.useTemplate` | Početi iz šablona |
 | `templates.none` | Bez šablona |
 | `templates.save` | Sačuvaj kao šablon |
+| `templates.title` | Šabloni |
+| `templates.col.name` | Naziv |
+| `templates.col.table` | Tabela |
+| `templates.col.modified` | Izmenjen |
+| `templates.col.actions` | Akcije |
 | `templates.name` | Naziv |
 | `templates.saveHint` | Čuva mapiranje, pravila i konstante. |
 | `templates.val.nameRequired` | Naziv je obavezan. |
@@ -511,6 +599,23 @@ Centralizovati u jednom fajlu (npr. `src/messages.sr.ts`), bez teksta u komponen
 | `templates.err.load` | Šabloni nisu mogli da se učitaju. |
 | `templates.empty` | Još nema sačuvanih šablona. Šablon možete sačuvati u koraku 4 ili posle uvoza. |
 | `history.title` | Istorija uvoza |
+| `history.filter.status` | Status |
+| `history.filter.all` | Svi |
+| `history.filter.from` | Od |
+| `history.filter.to` | Do |
+| `history.col.date` | Datum |
+| `history.col.file` | Fajl |
+| `history.col.table` | Tabela |
+| `history.col.template` | Šablon |
+| `history.col.status` | Status |
+| `history.summary` | Uvezeno {imported} · Preskočeno {skipped} · Greške {errors} |
+| `history.pageInfo` | Prikazano {from}–{to} od {total} |
+| `history.prev` | Prethodna |
+| `history.next` | Sledeća |
+| `history.downloadReport` | Preuzmi izveštaj (.xlsx) |
+| `history.backToList` | Nazad na istoriju |
+| `history.menu` | Istorija uvoza |
+| `templates.menu` | Šabloni |
 | `history.err.load` | Istorija nije mogla da se učita. |
 | `history.err.notFound` | Uvoz nije pronađen. |
 | `history.empty` | Još nema izvršenih uvoza. |
