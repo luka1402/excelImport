@@ -1,0 +1,2 @@
+IF DB_ID(N'DemoDb') IS NULL
+    CREATE DATABASE DemoDb;
