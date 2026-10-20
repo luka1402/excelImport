@@ -78,3 +78,8 @@ dotnet_naming_style.underscore_camel_case.capitalization = camel_case
 # Testovi: opisna imena metoda sa donjim crtama, bez XML dokumentacije
 [tests/**/*.cs]
 dotnet_diagnostic.CA1707.severity = none
+
+# EF Core generisane migracije se ne stilizuju rucno
+[**/Persistence/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none

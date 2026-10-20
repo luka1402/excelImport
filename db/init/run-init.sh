@@ -15,4 +15,7 @@ if [ -n "${DEMO_APP_PASSWORD:-}" ]; then
 else
   echo "DEMO_APP_PASSWORD nije postavljen - preskacem kreiranje app logina."
 fi
-echo "DemoDb inicijalizovan."
+# ExcelImporterDb: baza + EF migracije (idempotentna skripta generisana iz 'dotnet ef migrations script --idempotent')
+run -i /init/05-create-excelimporterdb.sql
+run -d ExcelImporterDb -i /init/10-excelimporterdb-migrations.sql
+echo "DemoDb i ExcelImporterDb inicijalizovani."
