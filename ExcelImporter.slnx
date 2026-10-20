@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ExcelImporter.Api/ExcelImporter.Api.csproj" />
+    <Project Path="src/ExcelImporter.Application/ExcelImporter.Application.csproj" />
+    <Project Path="src/ExcelImporter.Domain/ExcelImporter.Domain.csproj" />
+    <Project Path="src/ExcelImporter.Infrastructure/ExcelImporter.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ExcelImporter.Api.Tests/ExcelImporter.Api.Tests.csproj" />
+    <Project Path="tests/ExcelImporter.Application.Tests/ExcelImporter.Application.Tests.csproj" />
+    <Project Path="tests/ExcelImporter.Domain.Tests/ExcelImporter.Domain.Tests.csproj" />
+    <Project Path="tests/ExcelImporter.Infrastructure.Tests/ExcelImporter.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

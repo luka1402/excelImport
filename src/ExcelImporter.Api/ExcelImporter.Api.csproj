@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExcelImporter.Application\ExcelImporter.Application.csproj" />
+    <ProjectReference Include="..\ExcelImporter.Infrastructure\ExcelImporter.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RootNamespace>ExcelImporter.Api</RootNamespace>
+  </PropertyGroup>
+
+</Project>
+

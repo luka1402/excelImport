@@ -1,0 +1,6 @@
+﻿<Project>
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <!-- Prazni test projekti (još bez testova) ne smeju da obore pokretanje. -->
+    <TestingPlatformCommandLineArguments>--ignore-exit-code 8</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExcelImporter.Application\ExcelImporter.Application.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RootNamespace>ExcelImporter.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+</Project>
+

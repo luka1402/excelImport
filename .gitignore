@@ -1,0 +1,41 @@
+# Tajne i lokalna konfiguracija
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+secrets.json
+
+# .NET build izlaz
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+coverage/
+*.trx
+*.coverage
+coverage.cobertura.xml
+
+# Frontend
+node_modules/
+dist/
+.vite/
+
+# E2E
+playwright-report/
+test-results/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Privremeni fajlovi aplikacije (upload, izveštaji)
+App_Data/
+tmp/
+
+# Claude Code lokalna podešavanja
+.claude/settings.local.json

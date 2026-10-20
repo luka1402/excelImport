@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ExcelImporter.Domain</RootNamespace>
+  </PropertyGroup>
+
+</Project>
+
