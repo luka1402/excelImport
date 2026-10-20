@@ -39,3 +39,6 @@ tmp/
 
 # Claude Code lokalna podešavanja
 .claude/settings.local.json
+
+# Veliki generisani test Excel fajlovi (COA-29): generisu se skriptom, ne idu u repo
+tests/TestData/files/large/
