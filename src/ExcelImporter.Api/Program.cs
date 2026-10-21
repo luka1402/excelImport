@@ -2,6 +2,7 @@ using ExcelImporter.Api;
 using ExcelImporter.Api.Configuration;
 using ExcelImporter.Api.Files;
 using ExcelImporter.Api.Health;
+using ExcelImporter.Api.Templates;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 
@@ -22,6 +23,7 @@ if (app.Services.GetRequiredService<IOptions<OpenApiSettings>>().Value.Enabled)
 app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthResponseWriter.WriteAsync });
 
 app.MapFileEndpoints();
+app.MapTemplateEndpoints();
 
 return StartupErrorReporter.Run(app.Run, Console.Error);
 

@@ -1,9 +1,13 @@
 using ExcelImporter.Application.Files;
 using ExcelImporter.Application.Rules;
 using ExcelImporter.Application.Schema;
+using ExcelImporter.Application.Templates;
 using ExcelImporter.Infrastructure.Excel;
 using ExcelImporter.Infrastructure.Persistence;
 using ExcelImporter.Infrastructure.Schema;
+using ExcelImporter.Infrastructure.Templates;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -25,6 +29,11 @@ public static class DependencyInjection
         services.AddSingleton<ILookupDictionaryLoader, LookupDictionaryLoader>();
         services.AddSingleton<IExcelSheetReader, ExcelDataSheetReader>();
         services.AddSingleton<IUploadedFileStore, LocalUploadedFileStore>();
+        services.AddDbContext<ExcelImporterDbContext>((provider, options) =>
+            options.UseSqlServer(provider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString));
+        services.AddScoped<ITemplateStore, EfTemplateStore>();
+        services.AddScoped<ITemplateSchemaSource, ConfiguredTemplateSchemaSource>();
+        services.AddScoped<TemplateService>();
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>(DatabaseHealthCheckName, failureStatus: HealthStatus.Unhealthy, tags: ["ready"]);
 
