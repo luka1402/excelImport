@@ -9,7 +9,18 @@ public interface IExcelSheetReader
     /// <exception cref="UnreadableExcelFileException">Sadržaj nije ispravan .xlsx.</exception>
     /// <exception cref="SheetNotFoundException">Sheet sa datim indeksom ne postoji.</exception>
     SheetPreview ReadPreview(Stream content, int sheetIndex, int rowCount, CancellationToken cancellationToken);
+
+    /// <summary>Lista sheet-ova i pregled izabranog sheet-a u jednom otvaranju fajla; <paramref name="selectSheet"/> bira sheet iz liste.</summary>
+    /// <exception cref="UnreadableExcelFileException">Sadržaj nije ispravan .xlsx.</exception>
+    /// <exception cref="SheetNotFoundException">Sheet sa datim indeksom ne postoji.</exception>
+    WorkbookPreview ReadWorkbook(
+        Stream content,
+        Func<IReadOnlyList<SheetInfo>, SheetInfo> selectSheet,
+        int rowCount,
+        CancellationToken cancellationToken);
 }
+
+public sealed record WorkbookPreview(IReadOnlyList<SheetInfo> Sheets, SheetInfo Selected, SheetPreview Preview);
 
 /// <summary>Pristup već otpremljenim fajlovima po identifikatoru; putanja se nikad ne gradi od korisničkog unosa.</summary>
 public interface IUploadedFileStore

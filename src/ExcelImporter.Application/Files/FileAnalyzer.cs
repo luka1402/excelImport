@@ -21,11 +21,7 @@ public sealed class FileAnalyzer(IUploadedFileStore fileStore, IExcelSheetReader
             return null;
         }
 
-        var sheets = reader.ListSheets(content, cancellationToken);
-        var selected = SelectSheet(sheets, sheetIndex);
-
-        content.Position = 0;
-        var sample = reader.ReadPreview(content, selected.Index, SampleRowCount, cancellationToken);
+        var (sheets, selected, sample) = reader.ReadWorkbook(content, all => SelectSheet(all, sheetIndex), SampleRowCount, cancellationToken);
         var structure = DetectStructure(sample, headerRowIndex);
         var preview = sample with { Rows = [.. sample.Rows.Take(PreviewRowCount)] };
         return new FileAnalysis(sheets, selected, preview, structure);

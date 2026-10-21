@@ -117,6 +117,38 @@ public class ExcelDataSheetReaderTests
         (twentyRows - oneRow).ShouldBeLessThan(2_000_000);
     }
 
+    [Fact]
+    public void Analyze_OpensLargeFileOnce_AndAllocatesFarLessThanFileSizeImplies()
+    {
+        const string largeFile = "large/06-large-100k.xlsx";
+        Assert.SkipUnless(File.Exists(Path.Combine(TestDataDirectory, largeFile)), "Fajl 06-large-100k.xlsx nije generisan.");
+        var store = new CountingStore(Path.Combine(TestDataDirectory, largeFile));
+        var analyzer = new FileAnalyzer(store, reader);
+        var cancellationToken = TestContext.Current.CancellationToken;
+        analyzer.Analyze(Guid.NewGuid(), null, cancellationToken);
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var analysis = analyzer.Analyze(Guid.NewGuid(), null, cancellationToken);
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        TestContext.Current.SendDiagnosticMessage($"Analyze 100k: {allocated / 1_000_000.0:F2} MB, {stopwatch.ElapsedMilliseconds} ms");
+
+        analysis.ShouldNotBeNull().Preview.Rows.Count.ShouldBe(FileAnalyzer.PreviewRowCount);
+        store.Opened.ShouldBe(2); // jedno otvaranje po Analyze pozivu (zagrevanje + merenje)
+        allocated.ShouldBeLessThan(10_000_000);
+    }
+
+    private sealed class CountingStore(string path) : IUploadedFileStore
+    {
+        public int Opened { get; private set; }
+
+        public Stream? OpenRead(Guid fileId)
+        {
+            Opened++;
+            return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+    }
+
     private long AllocatedBy(string file, int rowCount, CancellationToken cancellationToken)
     {
         using var content = Open(file);
