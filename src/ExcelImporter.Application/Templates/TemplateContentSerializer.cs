@@ -32,7 +32,7 @@ public static class TemplateContentSerializer
                 ?? throw new JsonException("Mapiranje je prazno.");
             return Parse(envelope.SourceColumns, envelope.Mappings, rulesJson, constantsJson);
         }
-        catch (Exception exception) when (exception is JsonException or RuleSerializationException)
+        catch (Exception exception) when (exception is JsonException or RuleSerializationException or ArgumentException)
         {
             throw new TemplateInvalidException([$"Sačuvani sadržaj šablona nije čitljiv: {exception.Message}"]);
         }
@@ -47,9 +47,25 @@ public static class TemplateContentSerializer
         string rulesJson,
         string constantsJson)
     {
+        // Ručno izmenjen JSON ili telo zahteva mogu imati null elemente koje deserijalizator ne odbija.
+        if (sourceColumns is null || sourceColumns.Any(column => column is null))
+        {
+            throw new JsonException("Kolone izvornog fajla ne smeju biti prazne.");
+        }
+
+        if (mappings is null || mappings.Any(mapping => mapping is null || mapping.SourceColumn is null || mapping.TargetColumn is null))
+        {
+            throw new JsonException("Svako mapiranje mora imati sourceColumn i targetColumn.");
+        }
+
         var rules = RuleSerializer.DeserializeMany(rulesJson);
         var constants = JsonSerializer.Deserialize<List<ColumnConstant>>(constantsJson, Options)
             ?? throw new JsonException("Konstante su prazne.");
+        if (constants.Any(constant => constant is null || constant.TargetColumn is null || constant.Value is null))
+        {
+            throw new JsonException("Svaka konstanta mora imati targetColumn i value.");
+        }
+
         return new TemplateContent(sourceColumns, mappings, rules, constants);
     }
 

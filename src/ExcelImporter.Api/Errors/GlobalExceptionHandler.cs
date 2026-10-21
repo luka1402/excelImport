@@ -17,6 +17,17 @@ public sealed partial class GlobalExceptionHandler(IProblemDetailsService proble
             return true;
         }
 
+        // Neispravno ili prazno telo zahteva je greška klijenta, ne servera.
+        if (exception is BadHttpRequestException badRequest)
+        {
+            httpContext.Response.StatusCode = badRequest.StatusCode;
+            return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                ProblemDetails = new ProblemDetails { Status = badRequest.StatusCode, Title = "Zahtev nije ispravan." },
+            });
+        }
+
         LogUnhandled(exception, httpContext.Request.Method, httpContext.Request.Path);
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
