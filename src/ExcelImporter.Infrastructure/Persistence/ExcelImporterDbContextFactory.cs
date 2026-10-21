@@ -11,7 +11,7 @@ internal sealed class ExcelImporterDbContextFactory : IDesignTimeDbContextFactor
     public ExcelImporterDbContext CreateDbContext(string[] args)
     {
         var connectionString = Environment.GetEnvironmentVariable(ConnectionEnvironmentVariable)
-            ?? "Server=.;Database=ExcelImporterDb;Integrated Security=true;TrustServerCertificate=true";
+            ?? "Server=(localdb)\\MSSQLLocalDB;Database=ExcelImporterDb;Integrated Security=true;TrustServerCertificate=true";
 
         var options = new DbContextOptionsBuilder<ExcelImporterDbContext>()
             .UseSqlServer(connectionString)
