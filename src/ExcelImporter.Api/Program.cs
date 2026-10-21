@@ -23,7 +23,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthR
 
 app.MapFileEndpoints();
 
-app.Run();
+return StartupErrorReporter.Run(app.Run, Console.Error);
 
 // Potrebno da WebApplicationFactory<Program> može da se koristi u Api.Tests.
 public partial class Program;

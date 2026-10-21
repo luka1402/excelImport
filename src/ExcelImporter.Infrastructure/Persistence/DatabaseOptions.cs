@@ -7,7 +7,7 @@ public sealed class DatabaseOptions
 {
     public const string SectionName = "Database";
 
-    [Required(AllowEmptyStrings = false)]
+    [Required(AllowEmptyStrings = false, ErrorMessage = "Connection string baze nije podesen. Postavite environment varijablu Database__ConnectionString (ili user-secrets kljuc Database:ConnectionString).")]
     public string ConnectionString { get; init; } = string.Empty;
 
     [Range(1, 120)]

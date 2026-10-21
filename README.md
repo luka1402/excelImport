@@ -24,4 +24,9 @@ dotnet ef database update
 
 Komanda kreira bazu `ExcelImporterDb` na `(localdb)\MSSQLLocalDB` i primenjuje sve migracije.
 Za drugu instancu postavite `EXCELIMPORTER_DESIGN_CONNECTION` (connection string se ne cuva u kodu).
+Van Development okruzenja (Production) connection string mora da se postavi env varijablom `Database__ConnectionString`
+(ili user-secrets kljucem `Database:ConnectionString`). Ako nedostaje, aplikacija ispisuje jasnu poruku i izlazi
+sa kodom 1. `dotnet run` koristi launch profil sa `ASPNETCORE_ENVIRONMENT=Development` (LocalDB). `/health` vraca 503
+kad baza nije dostupna, a proces ostaje ziv.
+
 Nova migracija: `dotnet ef migrations add <Ime>`. Alat: `dotnet tool update --global dotnet-ef`.
