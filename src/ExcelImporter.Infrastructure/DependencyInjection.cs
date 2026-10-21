@@ -1,4 +1,6 @@
+using ExcelImporter.Application.Schema;
 using ExcelImporter.Infrastructure.Persistence;
+using ExcelImporter.Infrastructure.Schema;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -12,6 +14,10 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddSingleton<IDatabaseProbe, SqlServerDatabaseProbe>();
+        services.AddSingleton<ISchemaReader, SqlServerSchemaReader>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<ISchemaProvider, CachedSchemaProvider>();
+        services.AddOptions<SchemaCacheOptions>();
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>(DatabaseHealthCheckName, failureStatus: HealthStatus.Unhealthy, tags: ["ready"]);
 
