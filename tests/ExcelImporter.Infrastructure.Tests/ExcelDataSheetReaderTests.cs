@@ -122,7 +122,7 @@ public class ExcelDataSheetReaderTests
         using var content = Open(file);
         var before = GC.GetAllocatedBytesForCurrentThread();
         reader.ReadPreview(content, 0, rowCount, cancellationToken);
-        return GC.GetTotalAllocatedBytes(precise: true) - before;
+        return GC.GetAllocatedBytesForCurrentThread() - before;
     }
 
     [Theory]
