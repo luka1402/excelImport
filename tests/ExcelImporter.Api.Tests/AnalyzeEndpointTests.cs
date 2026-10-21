@@ -138,4 +138,14 @@ public sealed class AnalyzeEndpointTests : IClassFixture<ApiFactory>, IDisposabl
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
     }
+
+    [Fact]
+    public async Task Analyze_Returns400_WhenFileIsZipBomb()
+    {
+        var fileId = Upload("malicious/m08-zip-bomb.xlsx");
+
+        var response = await client.GetAsync($"/api/files/{fileId}/analyze", TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
 }
