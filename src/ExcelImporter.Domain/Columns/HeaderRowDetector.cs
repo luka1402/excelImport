@@ -22,7 +22,7 @@ public static class HeaderRowDetector
 
         for (var index = 0; index < candidates.Count; index++)
         {
-            if (IsHeaderLike(candidates[index], widest))
+            if (IsHeaderLike(candidates[index], widest) && CoversFollowingRow(candidates, index))
             {
                 return index;
             }
@@ -85,6 +85,38 @@ public static class HeaderRowDetector
 
         var allText = filled.All(cell => CellValueClassifier.Classify(cell) == ColumnType.Text);
         return allText && HasDistinctValues(filled);
+    }
+
+    // Naslov izveštaja sa delimično popunjenim redom (npr. 2 od 3 ćelije) ne sme da prođe kao header
+    // kada sledeći popunjen red ima više ćelija, jer header mora imati naziv za svaku kolonu podataka.
+    // Izuzetak je red sa praznom ćelijom unutar popunjenog raspona: naslov izveštaja je uvek sabijen,
+    // a ovakav red je header kome nedostaje naziv kolone (dobija generisani naziv).
+    private static bool CoversFollowingRow(List<IReadOnlyList<string?>> candidates, int index)
+    {
+        if (HasInnerGap(candidates[index]))
+        {
+            return true;
+        }
+
+        var filled = CountFilled(candidates[index]);
+        var next = candidates.Skip(index + 1).Select(CountFilled).FirstOrDefault(count => count > 0);
+        return filled >= next;
+    }
+
+    private static bool HasInnerGap(IReadOnlyList<string?> row)
+    {
+        var first = -1;
+        var last = -1;
+        for (var column = 0; column < row.Count; column++)
+        {
+            if (!string.IsNullOrWhiteSpace(row[column]))
+            {
+                first = first < 0 ? column : first;
+                last = column;
+            }
+        }
+
+        return first >= 0 && last - first + 1 > CountFilled(row);
     }
 
     private static int CountFilled(IReadOnlyList<string?> row) => row.Count(cell => !string.IsNullOrWhiteSpace(cell));
