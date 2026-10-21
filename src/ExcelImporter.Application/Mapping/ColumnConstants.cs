@@ -58,6 +58,13 @@ public static class ColumnConstants
                 continue;
             }
 
+            // Value stiže iz JSON-a (`"value": null`), pa ga model ne garantuje.
+            if (constant.Value is null)
+            {
+                errors.Add(new MappingError(column.Name, $"Kolona \"{column.Name}\" nema zadatu vrednost konstante."));
+                continue;
+            }
+
             if (ValidateValue(column, constant.Value) is { } message)
             {
                 errors.Add(new MappingError(column.Name, message));
