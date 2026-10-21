@@ -44,6 +44,21 @@ public sealed class ExcelDataSheetReader(IOptions<ExcelReadingOptions> options) 
         });
     }
 
+    public IEnumerable<IReadOnlyList<string?>> StreamRows(
+        Stream content,
+        Func<IReadOnlyList<SheetInfo>, SheetInfo> selectSheet,
+        CancellationToken cancellationToken)
+    {
+        // Fajl ostaje otvoren dok se enumeracija ne završi; izuzeci čitanja se prevode isto kao u ostalim metodama.
+        using var workbook = Guard(() => XlsxWorkbook.Open(content, options.Value.MaxUncompressedBytes));
+        var selected = selectSheet(workbook.Sheets);
+        using var rows = workbook.EnumerateRows(selected.Index, options.Value.MaxPreviewColumns, cancellationToken).GetEnumerator();
+        while (Guard(rows.MoveNext))
+        {
+            yield return rows.Current;
+        }
+    }
+
     // Oštećen ili nevalidan sadržaj (nije ZIP, loš XML, DTD...) se prijavljuje domenskim izuzetkom; I/O greške se propagiraju.
     private static T Guard<T>(Func<T> read)
     {

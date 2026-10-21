@@ -37,7 +37,7 @@ public sealed class FileAnalyzer(IUploadedFileStore fileStore, IExcelSheetReader
         return SheetStructureDetector.Detect(sample.Rows, headerRowIndex);
     }
 
-    private static SheetInfo SelectSheet(IReadOnlyList<SheetInfo> sheets, int? sheetIndex)
+    internal static SheetInfo SelectSheet(IReadOnlyList<SheetInfo> sheets, int? sheetIndex)
     {
         if (sheetIndex is { } index)
         {

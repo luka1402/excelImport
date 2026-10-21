@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using System.Xml;
@@ -17,6 +17,7 @@ internal sealed class XlsxWorkbook : IDisposable
     private const string RelationshipsPath = "xl/_rels/workbook.xml.rels";
     private const string SharedStringsPath = "xl/sharedStrings.xml";
     private const string StylesPath = "xl/styles.xml";
+    private const int StreamBatchSize = 2000;
 
     private static readonly XmlReaderSettings XmlSettings = new()
     {
@@ -129,6 +130,122 @@ internal sealed class XlsxWorkbook : IDisposable
             }),
         ];
         return new SheetPreview(rectangular, truncated);
+    }
+
+    /// <summary>
+    /// Svi redovi sheet-a redom (prazni redovi između se vraćaju kao prazne liste, pa je pozicija = broj reda - 1).
+    /// Redovi se čitaju u grupama od <see cref="StreamBatchSize"/>: shared strings se razrešavaju po grupi, pa memorija
+    /// ne zavisi od broja redova u fajlu.
+    /// </summary>
+    public IEnumerable<IReadOnlyList<string?>> EnumerateRows(int sheetIndex, int maxColumns, CancellationToken cancellationToken)
+    {
+        if (sheetIndex < 0 || sheetIndex >= sheets.Count)
+        {
+            throw new SheetNotFoundException(sheetIndex);
+        }
+
+        var sheetEntry = FindEntry(sheets[sheetIndex].Path)
+            ?? throw new InvalidDataException("Sheet nema sadržaj u arhivi.");
+
+        return EnumerateRows(sheetEntry, maxColumns, cancellationToken);
+    }
+
+    private IEnumerable<IReadOnlyList<string?>> EnumerateRows(ZipArchiveEntry sheetEntry, int maxColumns, CancellationToken cancellationToken)
+    {
+        var sharedStrings = LoadSharedStrings(cancellationToken);
+        var batch = new List<List<string?>>(StreamBatchSize);
+        var pendingStrings = new List<PendingString>();
+        var lastRowNumber = 0;
+
+        using var reader = CreateReader(sheetEntry);
+        while (reader.Read())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "row")
+            {
+                continue;
+            }
+
+            var rowNumber = int.TryParse(reader.GetAttribute("r"), NumberStyles.None, CultureInfo.InvariantCulture, out var declared) && declared > lastRowNumber
+                ? declared
+                : lastRowNumber + 1;
+
+            for (var gap = lastRowNumber + 1; gap < rowNumber; gap++)
+            {
+                batch.Add([]);
+                if (batch.Count >= StreamBatchSize)
+                {
+                    foreach (var row in FlushBatch(batch, pendingStrings, sharedStrings))
+                    {
+                        yield return row;
+                    }
+                }
+            }
+
+            lastRowNumber = rowNumber;
+            var cells = new List<string?>();
+            batch.Add(cells);
+            ReadCells(reader, cells, batch.Count - 1, maxColumns, pendingStrings);
+
+            if (batch.Count >= StreamBatchSize)
+            {
+                foreach (var row in FlushBatch(batch, pendingStrings, sharedStrings))
+                {
+                    yield return row;
+                }
+            }
+        }
+
+        foreach (var row in FlushBatch(batch, pendingStrings, sharedStrings))
+        {
+            yield return row;
+        }
+    }
+
+    private static List<List<string?>> FlushBatch(List<List<string?>> batch, List<PendingString> pendingStrings, List<string> sharedStrings)
+    {
+        foreach (var item in pendingStrings)
+        {
+            if (item.SharedIndex < sharedStrings.Count && sharedStrings[item.SharedIndex] is { Length: > 0 } text)
+            {
+                batch[item.Row][item.Column] = text;
+            }
+        }
+
+        var rows = new List<List<string?>>(batch);
+        batch.Clear();
+        pendingStrings.Clear();
+        return rows;
+    }
+
+    // Za potpuni prolaz tabela se učitava jednom (ponovno skeniranje po grupi bi trošilo budžet bajtova i bilo kvadratno).
+    // Veličina je ograničena nekompresovanim limitom arhive, a redovi sheet-a se i dalje čitaju strimovano.
+    private List<string> LoadSharedStrings(CancellationToken cancellationToken)
+    {
+        var strings = new List<string>();
+        var entry = FindEntry(SharedStringsPath);
+        if (entry is null)
+        {
+            return strings;
+        }
+
+        using var reader = CreateReader(entry);
+        var more = reader.Read();
+        while (more)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (reader.NodeType == XmlNodeType.Element && reader.LocalName == "si")
+            {
+                strings.Add(ReadRichText(reader));
+                more = !reader.EOF;
+            }
+            else
+            {
+                more = reader.Read();
+            }
+        }
+
+        return strings;
     }
 
     public void Dispose() => archive.Dispose();

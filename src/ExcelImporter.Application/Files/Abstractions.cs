@@ -18,6 +18,17 @@ public interface IExcelSheetReader
         Func<IReadOnlyList<SheetInfo>, SheetInfo> selectSheet,
         int rowCount,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Svi redovi izabranog sheet-a redom, lenjo (bez učitavanja celog fajla); pozicija u nizu je broj reda u Excelu - 1,
+    /// prazni redovi su prazne liste. Strim mora ostati otvoren do kraja enumeracije.
+    /// </summary>
+    /// <exception cref="UnreadableExcelFileException">Sadržaj nije ispravan .xlsx.</exception>
+    /// <exception cref="SheetNotFoundException">Izabrani sheet ne postoji.</exception>
+    IEnumerable<IReadOnlyList<string?>> StreamRows(
+        Stream content,
+        Func<IReadOnlyList<SheetInfo>, SheetInfo> selectSheet,
+        CancellationToken cancellationToken);
 }
 
 public sealed record WorkbookPreview(IReadOnlyList<SheetInfo> Sheets, SheetInfo Selected, SheetPreview Preview);
