@@ -1,12 +1,19 @@
+using ExcelImporter.Domain.Columns;
+
 namespace ExcelImporter.Application.Files;
 
-/// <summary>Korak 2 čarobnjaka: lista sheet-ova i pregled prvih redova izabranog sheet-a.</summary>
+/// <summary>Korak 2 čarobnjaka: lista sheet-ova, pregled prvih redova izabranog sheet-a, header red i tipovi kolona.</summary>
 public sealed class FileAnalyzer(IUploadedFileStore fileStore, IExcelSheetReader reader)
 {
     public const int PreviewRowCount = 20;
+    public const int SampleRowCount = SheetStructureDetector.DefaultSampleRowCount;
 
-    /// <summary>Vraća <c>null</c> ako fajl ne postoji. Bez <paramref name="sheetIndex"/> bira se prvi vidljiv sheet.</summary>
-    public FileAnalysis? Analyze(Guid fileId, int? sheetIndex, CancellationToken cancellationToken)
+    /// <summary>
+    /// Vraća <c>null</c> ako fajl ne postoji. Bez <paramref name="sheetIndex"/> bira se prvi vidljiv sheet;
+    /// bez <paramref name="headerRowIndex"/> (0-based) header se prepoznaje automatski.
+    /// </summary>
+    /// <exception cref="InvalidHeaderRowException">Ručno izabran red ne postoji u uzorku sheet-a.</exception>
+    public FileAnalysis? Analyze(Guid fileId, int? sheetIndex, CancellationToken cancellationToken, int? headerRowIndex = null)
     {
         using var content = fileStore.OpenRead(fileId);
         if (content is null)
@@ -18,8 +25,20 @@ public sealed class FileAnalyzer(IUploadedFileStore fileStore, IExcelSheetReader
         var selected = SelectSheet(sheets, sheetIndex);
 
         content.Position = 0;
-        var preview = reader.ReadPreview(content, selected.Index, PreviewRowCount, cancellationToken);
-        return new FileAnalysis(sheets, selected, preview);
+        var sample = reader.ReadPreview(content, selected.Index, SampleRowCount, cancellationToken);
+        var structure = DetectStructure(sample, headerRowIndex);
+        var preview = sample with { Rows = [.. sample.Rows.Take(PreviewRowCount)] };
+        return new FileAnalysis(sheets, selected, preview, structure);
+    }
+
+    private static SheetStructure DetectStructure(SheetPreview sample, int? headerRowIndex)
+    {
+        if (headerRowIndex is { } manual && (manual < 0 || manual >= sample.Rows.Count))
+        {
+            throw new InvalidHeaderRowException(manual, sample.Rows.Count);
+        }
+
+        return SheetStructureDetector.Detect(sample.Rows, headerRowIndex);
     }
 
     private static SheetInfo SelectSheet(IReadOnlyList<SheetInfo> sheets, int? sheetIndex)

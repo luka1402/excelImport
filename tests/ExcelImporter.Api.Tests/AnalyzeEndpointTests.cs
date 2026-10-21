@@ -77,6 +77,42 @@ public sealed class AnalyzeEndpointTests : IClassFixture<ApiFactory>, IDisposabl
     }
 
     [Fact]
+    public async Task Analyze_ReturnsDetectedHeaderAndColumnTypes()
+    {
+        var fileId = Upload("samples/01-valid.xlsx");
+
+        var response = await client.GetAsync($"/api/files/{fileId}/analyze", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        body.GetProperty("headerRowIndex").GetInt32().ShouldBe(0);
+        body.GetProperty("headerChosenManually").GetBoolean().ShouldBeFalse();
+        body.GetProperty("columns").GetArrayLength().ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task Analyze_UsesManuallyChosenHeaderRow()
+    {
+        var fileId = Upload("samples/01-valid.xlsx");
+
+        var response = await client.GetAsync($"/api/files/{fileId}/analyze?headerRow=2", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        body.GetProperty("headerRowIndex").GetInt32().ShouldBe(2);
+        body.GetProperty("headerChosenManually").GetBoolean().ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Analyze_Returns400_WhenHeaderRowDoesNotExist()
+    {
+        var fileId = Upload("samples/01-valid.xlsx");
+
+        var response = await client.GetAsync($"/api/files/{fileId}/analyze?headerRow=100000", TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Analyze_Returns404_WhenFileIsUnknown()
     {
         var response = await client.GetAsync($"/api/files/{Guid.NewGuid()}/analyze", TestContext.Current.CancellationToken);

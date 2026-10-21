@@ -21,5 +21,8 @@ public interface IUploadedFileStore
 public sealed class UnreadableExcelFileException(string message, Exception? innerException = null)
     : Exception(message, innerException);
 
+public sealed class InvalidHeaderRowException(int headerRowIndex, int rowCount)
+    : Exception($"Red {headerRowIndex} ne postoji; sheet ima {rowCount} redova u uzorku (0-based indeks).");
+
 public sealed class SheetNotFoundException(int sheetIndex)
     : Exception($"Sheet sa indeksom {sheetIndex} ne postoji.");
