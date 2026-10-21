@@ -16,6 +16,10 @@
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\TestData\files\**\*.*" Link="TestData\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <RootNamespace>ExcelImporter.Infrastructure.Tests</RootNamespace>
     <IsPackable>false</IsPackable>

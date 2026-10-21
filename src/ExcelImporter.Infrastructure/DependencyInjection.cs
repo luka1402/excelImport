@@ -1,4 +1,6 @@
+using ExcelImporter.Application.Files;
 using ExcelImporter.Application.Schema;
+using ExcelImporter.Infrastructure.Excel;
 using ExcelImporter.Infrastructure.Persistence;
 using ExcelImporter.Infrastructure.Schema;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,8 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<ISchemaProvider, CachedSchemaProvider>();
         services.AddOptions<SchemaCacheOptions>();
+        services.AddSingleton<IExcelSheetReader, ExcelDataSheetReader>();
+        services.AddSingleton<IUploadedFileStore, LocalUploadedFileStore>();
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>(DatabaseHealthCheckName, failureStatus: HealthStatus.Unhealthy, tags: ["ready"]);
 

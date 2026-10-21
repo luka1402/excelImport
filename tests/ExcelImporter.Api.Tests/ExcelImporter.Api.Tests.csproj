@@ -16,6 +16,11 @@
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\TestData\files\samples\*.xlsx" Link="TestData\samples\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\TestData\files\malicious\m01-*.xlsx" Link="TestData\malicious\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <RootNamespace>ExcelImporter.Api.Tests</RootNamespace>
     <IsPackable>false</IsPackable>

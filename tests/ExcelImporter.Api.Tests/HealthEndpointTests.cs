@@ -1,5 +1,6 @@
 using System.Net;
 using NSubstitute;
+using NSubstitute.ClearExtensions;
 using NSubstitute.ExceptionExtensions;
 using Shouldly;
 
