@@ -20,8 +20,9 @@ public class RuleSerializerTests
         {
             TargetField = "Code",
             SourceField = "Name",
-            Mappings = new Dictionary<string, string> { ["Beograd"] = "BG", ["Novi Sad"] = "NS" },
-            NotFoundValue = "??",
+            Table = "Gradovi",
+            KeyColumn = "Naziv",
+            ReturnColumn = "Id",
         },
         new RowFilterRule { Action = RowFilterAction.Exclude, Conditions = [new Condition("Name", ComparisonOperator.StartsWith, "TEST")] },
     };

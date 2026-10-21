@@ -78,10 +78,10 @@ public sealed class LookupRuleValidator : AbstractValidator<LookupRule>
     {
         RuleFor(rule => rule.TargetField).NotEmpty();
         RuleFor(rule => rule.SourceField).NotEmpty();
-        RuleFor(rule => rule.Mappings).NotEmpty().WithMessage("Tabela zamena ne sme biti prazna.");
-        RuleFor(rule => rule.Mappings)
-            .Must(mappings => mappings.Keys.All(key => !string.IsNullOrWhiteSpace(key)))
-            .WithMessage("Ključevi tabele zamena ne smeju biti prazni.");
+        RuleFor(rule => rule.Schema).NotEmpty();
+        RuleFor(rule => rule.Table).NotEmpty();
+        RuleFor(rule => rule.KeyColumn).NotEmpty();
+        RuleFor(rule => rule.ReturnColumn).NotEmpty();
     }
 }
 

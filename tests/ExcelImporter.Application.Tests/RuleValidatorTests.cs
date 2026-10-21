@@ -14,7 +14,7 @@ public class RuleValidatorTests
         new ConditionalValueRule { TargetField = "T", Conditions = [ValidCondition], Value = "x", ElseValue = "y" },
         new DefaultValueRule { TargetField = "T", Value = "x" },
         new TransformRule { TargetField = "T", Kind = TransformKind.Trim },
-        new LookupRule { TargetField = "T", SourceField = "S", Mappings = new Dictionary<string, string> { ["a"] = "b" } },
+        new LookupRule { TargetField = "T", SourceField = "S", Table = "Gradovi", KeyColumn = "Naziv", ReturnColumn = "Id" },
         new RowFilterRule { Action = RowFilterAction.Exclude, Conditions = [new Condition("Status", ComparisonOperator.IsEmpty)] },
     };
 
@@ -28,8 +28,10 @@ public class RuleValidatorTests
         new ConditionalValueRule { TargetField = "T", Conditions = [new Condition("S", (ComparisonOperator)99, "x")], Value = "x" },
         new DefaultValueRule { TargetField = "T", Value = " " },
         new TransformRule { TargetField = "T", Kind = (TransformKind)99 },
-        new LookupRule { TargetField = "T", SourceField = "S", Mappings = new Dictionary<string, string>() },
-        new LookupRule { TargetField = "T", SourceField = "", Mappings = new Dictionary<string, string> { ["a"] = "b" } },
+        new LookupRule { TargetField = "T", SourceField = "S", Table = "", KeyColumn = "Naziv", ReturnColumn = "Id" },
+        new LookupRule { TargetField = "T", SourceField = "", Table = "Gradovi", KeyColumn = "Naziv", ReturnColumn = "Id" },
+        new LookupRule { TargetField = "T", SourceField = "S", Table = "Gradovi", KeyColumn = " ", ReturnColumn = "Id" },
+        new LookupRule { TargetField = "T", SourceField = "S", Table = "Gradovi", KeyColumn = "Naziv", ReturnColumn = "" },
         new RowFilterRule { Action = RowFilterAction.Include, Conditions = [] },
         new DefaultValueRule { TargetField = "T", Value = "x", Version = 2 },
     };

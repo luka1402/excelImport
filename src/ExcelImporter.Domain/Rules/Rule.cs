@@ -46,14 +46,19 @@ public sealed record TransformRule : Rule
     public string? Separator { get; init; }
 }
 
-/// <summary>Zamenjuje vrednost izvorne kolone vrednošću iz tabele; ako je nema koristi NotFoundValue (ili ostavlja original).</summary>
+/// <summary>
+/// Strani ključ: vrednost izvorne (Excel) kolone traži se u ključnoj koloni tabele ciljne baze,
+/// a u <see cref="TargetField"/> upisuje se vrednost povratne kolone (npr. "Novi Sad" → GradId).
+/// </summary>
 public sealed record LookupRule : Rule
 {
     public override string Type => RuleTypes.Lookup;
     public required string TargetField { get; init; }
     public required string SourceField { get; init; }
-    public required IReadOnlyDictionary<string, string> Mappings { get; init; }
-    public string? NotFoundValue { get; init; }
+    public string Schema { get; init; } = "dbo";
+    public required string Table { get; init; }
+    public required string KeyColumn { get; init; }
+    public required string ReturnColumn { get; init; }
 }
 
 /// <summary>Uključuje ili isključuje redove za koje su svi uslovi ispunjeni.</summary>

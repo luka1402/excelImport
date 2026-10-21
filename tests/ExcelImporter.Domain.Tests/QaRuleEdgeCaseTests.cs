@@ -1,4 +1,4 @@
-﻿using ExcelImporter.Domain.Rules;
+using ExcelImporter.Domain.Rules;
 using Shouldly;
 using static ExcelImporter.Domain.Rules.ComparisonOperator;
 
@@ -42,7 +42,7 @@ public class QaRuleEdgeCaseTests
     [InlineData("""{"type":"rowFilter","version":1,"action":"include","conditions":null}""")]
     [InlineData("""{"type":"rowFilter","version":1,"action":"include","conditions":[null]}""")]
     [InlineData("""{"type":"rowFilter","version":1,"action":"include","conditions":[{"operator":"eq","value":"1"}]}""")]
-    [InlineData("""{"type":"lookup","version":1,"targetField":"A","sourceField":"B","mappings":null}""")]
+    [InlineData("""{"type":"lookup","version":1,"targetField":"A","sourceField":"B","table":null,"keyColumn":"K","returnColumn":"R"}""")]
     [InlineData("""{"type":"defaultValue","version":1,"targetField":"A","value":null}""")]
     [InlineData("""{"type":"defaultValue","version":1,"targetField":null,"value":"x"}""")]
     public void Deserialize_KnownDefects_ShouldThrowRuleSerializationException(string json) =>

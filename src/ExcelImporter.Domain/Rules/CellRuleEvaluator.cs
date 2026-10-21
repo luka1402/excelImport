@@ -145,7 +145,7 @@ public static class CellRuleEvaluator
     private static bool IsNumeric(object? value) =>
         value is decimal or double or float or int or long or short or byte or sbyte or ushort or uint or ulong;
 
-    private static string AsText(object? cell) => cell switch
+    internal static string AsText(object? cell) => cell switch
     {
         null => string.Empty,
         string text => text,
