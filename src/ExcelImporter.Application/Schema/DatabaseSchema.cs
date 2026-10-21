@@ -36,18 +36,18 @@ public sealed record TableSchema(
 /// </summary>
 public sealed class DatabaseSchema
 {
-    private readonly Dictionary<(string Schema, string Table), TableSchema> tablesByName;
+    private readonly Dictionary<(string Schema, string Table), TableSchema> _tablesByName;
 
     public DatabaseSchema(IEnumerable<TableSchema> tables)
     {
         Tables = [.. tables.OrderBy(table => table.Schema, StringComparer.OrdinalIgnoreCase).ThenBy(table => table.Name, StringComparer.OrdinalIgnoreCase)];
-        tablesByName = Tables.ToDictionary(table => (table.Schema, table.Name), NameComparer.Instance);
+        _tablesByName = Tables.ToDictionary(table => (table.Schema, table.Name), NameComparer.Instance);
     }
 
     public IReadOnlyList<TableSchema> Tables { get; }
 
     public TableSchema? FindTable(string schemaName, string tableName) =>
-        tablesByName.GetValueOrDefault((schemaName, tableName));
+        _tablesByName.GetValueOrDefault((schemaName, tableName));
 
     public bool TableExists(string schemaName, string tableName) => FindTable(schemaName, tableName) is not null;
 
