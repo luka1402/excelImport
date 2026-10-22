@@ -11,8 +11,14 @@ interface WizardContextValue {
 
 const WizardContext = createContext<WizardContextValue | null>(null);
 
-export function WizardProvider({ children }: { readonly children: ReactNode }) {
-  const [data, setData] = useState<WizardData>(initialWizardData);
+interface ProviderProps {
+  readonly children: ReactNode;
+  /** Početno stanje; koriste ga testovi pojedinačnih koraka. */
+  readonly initialData?: Partial<WizardData>;
+}
+
+export function WizardProvider({ children, initialData }: ProviderProps) {
+  const [data, setData] = useState<WizardData>({ ...initialWizardData, ...initialData });
   const [furthestIndex, setFurthestIndex] = useState(0);
 
   const updateData = useCallback((patch: Partial<WizardData>) => {

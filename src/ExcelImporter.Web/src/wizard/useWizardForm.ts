@@ -23,7 +23,8 @@ export function useWizardForm<TValues extends FieldValues & Partial<WizardData>>
 
   useEffect(() => {
     const subscription = form.watch((values) => {
-      updateData(values);
+      // RHF vraca DeepPartial, a mapiranje/konstante ovde nikad ne dolaze iz forme.
+      updateData(values as Partial<WizardData>);
     });
     return () => {
       subscription.unsubscribe();

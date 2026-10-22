@@ -49,7 +49,19 @@ describe('aplikacija sa pravim rutama i koracima', () => {
         Promise.resolve(
           input === '/api/connections'
             ? Response.json([{ id: 1, displayName: 'Demo baza' }])
-            : Response.json({ tables: [{ schema: 'dbo', name: 'Prodaja', columns: [], primaryKey: [], foreignKeys: [] }] }),
+            : Response.json({
+                tables: [
+                  {
+                    schema: 'dbo',
+                    name: 'Prodaja',
+                    columns: [
+                      { name: 'Kupac', ordinal: 1, dataType: 'nvarchar', isNullable: false, maxLength: 100, isIdentity: false, isComputed: false },
+                    ],
+                    primaryKey: [],
+                    foreignKeys: [],
+                  },
+                ],
+              }),
         ),
       ),
     );
@@ -69,6 +81,12 @@ describe('aplikacija sa pravim rutama i koracima', () => {
       if (decodeURIComponent(router.state.location.pathname) === '/uvoz/odredište') {
         await user.selectOptions(await screen.findByLabelText('Baza'), 'Demo baza');
         await user.selectOptions(await screen.findByLabelText('Tabela'), 'dbo.Prodaja');
+      }
+      if (router.state.location.pathname === '/uvoz/mapiranje') {
+        // Kolona „Kupac" se automatski predlaže, pa korak postaje validan.
+        await waitFor(() => {
+          expect(screen.getByRole('button', { name: /Dalje/ })).toBeEnabled();
+        });
       }
       await user.click(screen.getByRole('button', { name: /Dalje/ }));
     }

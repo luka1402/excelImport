@@ -3,6 +3,7 @@ import { PlaceholderStep } from './PlaceholderStep';
 import { AnalysisStep } from './analysis/AnalysisStep';
 import { UploadStep } from './upload/UploadStep';
 import { TargetStep } from './target/TargetStep';
+import { MappingStep } from './mapping/MappingStep';
 
 export const wizardSteps: readonly WizardStepDefinition[] = [
   {
@@ -37,7 +38,9 @@ export const wizardSteps: readonly WizardStepDefinition[] = [
     titleKey: 'step.mapping.title',
     navLabelKey: 'step.mapping.nav',
     hintKey: 'step.mapping.hint',
-    Component: PlaceholderStep,
+    Component: MappingStep,
+    isValid: (data) => data.mappingComplete,
+    disabledReasonKey: 'nav.disabledReason.mapping',
   },
   {
     slug: 'pravila',
