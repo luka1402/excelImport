@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddSingleton<IUploadedFileStore, LocalUploadedFileStore>();
         services.AddDbContext<ExcelImporterDbContext>((provider, options) =>
             options.UseSqlServer(provider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString));
+        services.AddScoped<IConnectionCatalog, ConfiguredConnectionCatalog>();
         services.AddScoped<ITemplateStore, EfTemplateStore>();
         services.AddScoped<ITemplateSchemaSource, ConfiguredTemplateSchemaSource>();
         services.AddScoped<TemplateService>();

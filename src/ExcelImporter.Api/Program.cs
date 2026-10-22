@@ -1,5 +1,6 @@
 using ExcelImporter.Api;
 using ExcelImporter.Api.Configuration;
+using ExcelImporter.Api.Connections;
 using ExcelImporter.Api.Files;
 using ExcelImporter.Api.Health;
 using ExcelImporter.Api.Templates;
@@ -24,6 +25,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthR
 
 app.MapFileEndpoints();
 app.MapTemplateEndpoints();
+app.MapConnectionEndpoints();
 
 return StartupErrorReporter.Run(app.Run, Console.Error);
 
