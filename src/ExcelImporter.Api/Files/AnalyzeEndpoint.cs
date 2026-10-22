@@ -7,6 +7,7 @@ public static class AnalyzeEndpoint
 {
     public static IEndpointRouteBuilder MapFileEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapUploadEndpoint();
         app.MapGet("/api/files/{fileId:guid}/analyze", Analyze)
             .WithName("AnalyzeFile")
             .Produces<AnalyzeResponse>()
