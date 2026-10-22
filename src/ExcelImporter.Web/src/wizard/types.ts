@@ -28,7 +28,61 @@ export interface WizardData {
   readonly mappingKey: string;
   /** Mapiranje je kompletno (obavezne kolone pokrivene, konstante ispravne), pa je moguće nastaviti. */
   readonly mappingComplete: boolean;
+  /** Pravila po ciljnoj koloni, redosledom unosa; brišu se kada se mapiranje napravi iznova. */
+  readonly rules: readonly ColumnRule[];
+  /** Forma pravila je otvorena (nova ili izmena); blokira nastavak dok se ne sačuva ili otkaže. */
+  readonly rulesEditing: boolean;
 }
+
+/** Nazivi prate ComparisonOperator i TransformKind na serveru (JSON vrednosti). */
+export type ComparisonOperator =
+  | 'eq'
+  | 'neq'
+  | 'gt'
+  | 'lt'
+  | 'gte'
+  | 'lte'
+  | 'contains'
+  | 'startsWith'
+  | 'isEmpty'
+  | 'isNotEmpty';
+
+export type TransformKind = 'trim' | 'upper' | 'lower' | 'dateFormat' | 'decimalSeparator';
+
+export interface RuleCondition {
+  /** Naziv ciljne kolone čija se vrednost proverava. */
+  readonly field: string;
+  readonly operator: ComparisonOperator;
+  readonly value: string;
+}
+
+interface RuleBase {
+  /** Lokalni identifikator za izmenu i brisanje; ne šalje se serveru. */
+  readonly id: string;
+  readonly targetField: string;
+}
+
+export interface ConditionalValueDraft extends RuleBase {
+  readonly type: 'conditionalValue';
+  readonly conditions: readonly RuleCondition[];
+  readonly value: string;
+  /** Prazno znači da kolona ostaje nepromenjena kada uslovi nisu ispunjeni. */
+  readonly elseValue: string;
+}
+
+export interface DefaultValueDraft extends RuleBase {
+  readonly type: 'defaultValue';
+  readonly value: string;
+}
+
+export interface TransformDraft extends RuleBase {
+  readonly type: 'transform';
+  readonly kind: TransformKind;
+  readonly format: string;
+  readonly separator: ',' | '.' | '';
+}
+
+export type ColumnRule = ConditionalValueDraft | DefaultValueDraft | TransformDraft;
 
 export interface MappingChoice {
   readonly target: string;
@@ -57,6 +111,8 @@ export const initialWizardData: WizardData = {
   constants: {},
   mappingKey: '',
   mappingComplete: false,
+  rules: [],
+  rulesEditing: false,
 };
 
 export interface WizardStepDefinition {

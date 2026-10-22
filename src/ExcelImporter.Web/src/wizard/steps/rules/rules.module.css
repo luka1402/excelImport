@@ -1,0 +1,90 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 16rem) 1fr;
+  gap: 1.5rem;
+}
+
+.columnList,
+.ruleList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.columnList button {
+  width: 100%;
+  min-height: 2.75rem;
+  text-align: left;
+}
+
+.columnList button[aria-current='true'] {
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.ruleList {
+  list-style: decimal inside;
+}
+
+.ruleList li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-left: 0.75rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field input[type='text'],
+.field select,
+.conditionRow select {
+  min-height: 2.75rem;
+}
+
+.conditionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.addRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.note {
+  color: var(--color-muted);
+}
+
+.invalid {
+  margin: 0;
+  color: var(--color-error);
+}
+
+@media (max-width: 640px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

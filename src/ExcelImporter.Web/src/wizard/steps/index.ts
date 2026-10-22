@@ -4,6 +4,7 @@ import { AnalysisStep } from './analysis/AnalysisStep';
 import { UploadStep } from './upload/UploadStep';
 import { TargetStep } from './target/TargetStep';
 import { MappingStep } from './mapping/MappingStep';
+import { RulesStep } from './rules/RulesStep';
 
 export const wizardSteps: readonly WizardStepDefinition[] = [
   {
@@ -47,7 +48,9 @@ export const wizardSteps: readonly WizardStepDefinition[] = [
     titleKey: 'step.rules.title',
     navLabelKey: 'step.rules.nav',
     hintKey: 'step.rules.hint',
-    Component: PlaceholderStep,
+    Component: RulesStep,
+    isValid: (data) => !data.rulesEditing,
+    disabledReasonKey: 'nav.disabledReason.rules',
   },
   {
     slug: 'pregled',
