@@ -1,5 +1,7 @@
 ﻿import type { WizardStepDefinition } from '../types';
 import { PlaceholderStep } from './PlaceholderStep';
+import { AnalysisStep } from './analysis/AnalysisStep';
+import { UploadStep } from './upload/UploadStep';
 import { TargetStep } from './target/TargetStep';
 
 export const wizardSteps: readonly WizardStepDefinition[] = [
@@ -8,14 +10,18 @@ export const wizardSteps: readonly WizardStepDefinition[] = [
     titleKey: 'step.file.title',
     navLabelKey: 'step.file.nav',
     hintKey: 'step.file.hint',
-    Component: PlaceholderStep,
+    Component: UploadStep,
+    isValid: (data) => data.fileId !== '',
+    disabledReasonKey: 'nav.disabledReason.file',
   },
   {
     slug: 'analiza',
     titleKey: 'step.analysis.title',
     navLabelKey: 'step.analysis.nav',
     hintKey: 'step.analysis.hint',
-    Component: PlaceholderStep,
+    Component: AnalysisStep,
+    isValid: (data) => data.analysisUsable,
+    disabledReasonKey: 'nav.disabledReason.analysisSheet',
   },
   {
     slug: 'odredište',
