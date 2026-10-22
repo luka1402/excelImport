@@ -1,6 +1,6 @@
 import { t, type MessageKey } from '../../../messages.sr';
-import type { ColumnRule, ComparisonOperator, RuleCondition, TransformKind } from '../../types';
-import type { ColumnInfo } from '../target/targetApi';
+import type { ComparisonOperator, LookupDraft, RuleCondition, RuleDraft, TransformKind } from '../../types';
+import type { ColumnInfo, TableInfo } from '../target/targetApi';
 import { isConstantValid, isDateColumn } from '../mapping/mappingLogic';
 
 // Pravila i poruke prate C# RuleValidators; server ponovo validira, ovo je pomoć korisniku.
@@ -110,24 +110,60 @@ export interface ConditionErrors {
   readonly value?: string;
 }
 
+export interface LookupErrors {
+  readonly sourceField?: string;
+  readonly table?: string;
+  readonly keyColumn?: string;
+  readonly returnColumn?: string;
+}
+
 export interface RuleErrors {
   readonly conditions: readonly ConditionErrors[];
   readonly value?: string;
   readonly elseValue?: string;
   readonly format?: string;
   readonly separator?: string;
+  readonly lookup: LookupErrors;
   readonly hasErrors: boolean;
 }
 
-export function validateRule(rule: ColumnRule, columns: ReadonlyMap<string, ColumnInfo>): RuleErrors {
-  const target = columns.get(rule.targetField);
+/** Tabela i kolone lookup-a moraju postojati u učitanoj šemi; server to ponovo proverava pri čuvanju šablona. */
+function lookupErrors(rule: LookupDraft, tables: readonly TableInfo[]): LookupErrors {
+  const table = tables.find((candidate) => candidate.schema === rule.schema && candidate.name === rule.table);
+  const columnError = (column: string, emptyMessage: string): string | undefined => {
+    if (column === '') {
+      return emptyMessage;
+    }
+    return table && !table.columns.some((candidate) => candidate.name === column) ? t('rules.val.columnMissing') : undefined;
+  };
+  return {
+    sourceField: rule.sourceField === '' ? t('rules.val.column') : undefined,
+    table: rule.table === '' ? t('rules.val.table') : table ? undefined : t('rules.val.tableMissing'),
+    keyColumn: columnError(rule.keyColumn, t('rules.val.keyColumn')),
+    returnColumn: columnError(rule.returnColumn, t('rules.val.returnColumn')),
+  };
+}
+
+export function validateRule(
+  rule: RuleDraft,
+  columns: ReadonlyMap<string, ColumnInfo>,
+  tables: readonly TableInfo[] = [],
+): RuleErrors {
+  const target = rule.type === 'rowFilter' ? undefined : columns.get(rule.targetField);
   let conditions: readonly ConditionErrors[] = [];
   let value: string | undefined;
   let elseValue: string | undefined;
   let format: string | undefined;
   let separator: string | undefined;
+  let lookup: LookupErrors = {};
 
   switch (rule.type) {
+    case 'rowFilter':
+      conditions = rule.conditions.map((condition) => conditionErrors(condition, columns));
+      break;
+    case 'lookup':
+      lookup = lookupErrors(rule, tables);
+      break;
     case 'conditionalValue':
       conditions = rule.conditions.map((condition) => conditionErrors(condition, columns));
       value = targetValueError(target, rule.value) ?? undefined;
@@ -151,21 +187,38 @@ export function validateRule(rule: ColumnRule, columns: ReadonlyMap<string, Colu
 
   const hasErrors =
     conditions.some((error) => error.field !== undefined || error.value !== undefined) ||
-    [value, elseValue, format, separator].some((error) => error !== undefined);
-  return { conditions, value, elseValue, format, separator, hasErrors };
+    [value, elseValue, format, separator, lookup.sourceField, lookup.table, lookup.keyColumn, lookup.returnColumn].some(
+      (error) => error !== undefined,
+    );
+  return { conditions, value, elseValue, format, separator, lookup, hasErrors };
+}
+
+function describeConditions(conditions: readonly RuleCondition[]): string {
+  return conditions
+    .map((condition) =>
+      [condition.field, operatorLabel(condition.operator), operatorNeedsValue(condition.operator) ? `„${condition.value}"` : '']
+        .filter((part) => part !== '')
+        .join(' '),
+    )
+    .join(t('rules.summary.and'));
 }
 
 /** Jedna rečenica koja opisuje pravilo u listi pravila kolone. */
-export function describeRule(rule: ColumnRule): string {
+export function describeRule(rule: RuleDraft): string {
   switch (rule.type) {
+    case 'rowFilter':
+      return t(rule.action === 'include' ? 'filters.summary.include' : 'filters.summary.exclude', {
+        conditions: describeConditions(rule.conditions),
+      });
+    case 'lookup':
+      return t('rules.summary.lookup', {
+        source: rule.sourceField,
+        table: `${rule.schema}.${rule.table}`,
+        key: rule.keyColumn,
+        returnColumn: rule.returnColumn,
+      });
     case 'conditionalValue': {
-      const conditions = rule.conditions
-        .map((condition) =>
-          [condition.field, operatorLabel(condition.operator), operatorNeedsValue(condition.operator) ? `„${condition.value}"` : '']
-            .filter((part) => part !== '')
-            .join(' '),
-        )
-        .join(t('rules.summary.and'));
+      const conditions = describeConditions(rule.conditions);
       return rule.elseValue.trim() === ''
         ? t('rules.summary.conditional', { conditions, value: rule.value })
         : t('rules.summary.conditionalElse', { conditions, value: rule.value, elseValue: rule.elseValue });

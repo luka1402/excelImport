@@ -55,7 +55,7 @@ export function MappingStep() {
     for (const suggestion of suggestMapping(columns, table)) {
       mapping[suggestion.sourceColumn] = { target: suggestion.targetColumn, suggested: true };
     }
-    updateData({ mapping, constants: {}, rules: [], rulesEditing: false, mappingKey: key });
+    updateData({ mapping, constants: {}, rules: [], rowFilters: [], rulesEditing: false, mappingKey: key });
   }, [columns, table, initialized, key, updateData]);
 
   const evaluation = useMemo(

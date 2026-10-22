@@ -24,6 +24,13 @@ const schemaBody = {
       primaryKey: [],
       foreignKeys: [],
     },
+    {
+      schema: 'dbo',
+      name: 'Grad',
+      columns: [targetColumn('Id', 'int'), targetColumn('Naziv', 'nvarchar', 50)],
+      primaryKey: ['Id'],
+      foreignKeys: [],
+    },
   ],
 };
 
@@ -46,6 +53,8 @@ function Probe() {
     <>
       <p data-testid="uredjuje">{String(data.rulesEditing)}</p>
       <p data-testid="broj">{data.rules.length}</p>
+      <p data-testid="filteri">{data.rowFilters.length}</p>
+      <pre data-testid="podaci">{JSON.stringify({ rules: data.rules, rowFilters: data.rowFilters })}</pre>
     </>
   );
 }
@@ -204,6 +213,153 @@ describe('RulesStep', () => {
     await user.click(screen.getByRole('button', { name: 'Otkaži' }));
     expect(screen.getByTestId('broj')).toHaveTextContent('0');
     expect(screen.getByTestId('uredjuje')).toHaveTextContent('false');
+  });
+
+  describe('lookup', () => {
+    async function openLookupForm(user: ReturnType<typeof userEvent.setup>) {
+      await openColumn(user, 'Kupac');
+      await user.selectOptions(screen.getByLabelText('Vrsta pravila'), 'Lookup (strani ključ)');
+      await user.click(screen.getByRole('button', { name: /Dodaj pravilo/ }));
+    }
+
+    it('nudi samo tabele i kolone iz učitane šeme', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await openLookupForm(user);
+
+      const sources = within(screen.getByLabelText('Kolona čija se vrednost traži'));
+      expect(sources.getAllByRole('option').map((option) => option.textContent)).toEqual(['—', 'Kupac', 'Kolicina', 'Status']);
+      const tables = within(screen.getByLabelText('Tabela'));
+      expect(tables.getAllByRole('option').map((option) => option.textContent)).toEqual(['—', 'dbo.Prodaja', 'dbo.Grad']);
+      expect(within(screen.getByLabelText(/^Ključna kolona/)).getAllByRole('option')).toHaveLength(1);
+
+      await user.selectOptions(screen.getByLabelText('Tabela'), 'dbo.Grad');
+      expect(
+        within(screen.getByLabelText(/^Ključna kolona/)).getAllByRole('option').map((option) => option.textContent),
+      ).toEqual(['—', 'Id', 'Naziv']);
+    });
+
+    it('traži tabelu i kolone, a čuva ispravno pravilo', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await openLookupForm(user);
+
+      await user.click(screen.getByRole('button', { name: 'Sačuvaj pravilo' }));
+      expect(screen.getAllByRole('alert').map((alert) => alert.textContent)).toEqual([
+        'Izaberite tabelu.',
+        'Izaberite ključnu kolonu.',
+        'Izaberite povratnu kolonu.',
+      ]);
+
+      await user.selectOptions(screen.getByLabelText('Tabela'), 'dbo.Grad');
+      await user.selectOptions(screen.getByLabelText(/^Ključna kolona/), 'Naziv');
+      await user.selectOptions(screen.getByLabelText(/^Povratna kolona/), 'Id');
+      await user.click(screen.getByRole('button', { name: 'Sačuvaj pravilo' }));
+
+      expect(screen.getByText('Lookup: Kupac → dbo.Grad.Naziv → Id')).toBeInTheDocument();
+      expect(screen.getByTestId('podaci')).toHaveTextContent(
+        '"type":"lookup","targetField":"Kupac","sourceField":"Kupac","schema":"dbo","table":"Grad","keyColumn":"Naziv","returnColumn":"Id"',
+      );
+    });
+
+    it('promena tabele poništava izabrane kolone', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await openLookupForm(user);
+      await user.selectOptions(screen.getByLabelText('Tabela'), 'dbo.Grad');
+      await user.selectOptions(screen.getByLabelText(/^Ključna kolona/), 'Naziv');
+      await user.selectOptions(screen.getByLabelText('Tabela'), 'dbo.Prodaja');
+      expect(screen.getByLabelText(/^Ključna kolona/)).toHaveValue('');
+    });
+
+    it('kolona može imati samo jedan lookup', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await openLookupForm(user);
+      await user.selectOptions(screen.getByLabelText('Tabela'), 'dbo.Grad');
+      await user.selectOptions(screen.getByLabelText(/^Ključna kolona/), 'Naziv');
+      await user.selectOptions(screen.getByLabelText(/^Povratna kolona/), 'Id');
+      await user.click(screen.getByRole('button', { name: 'Sačuvaj pravilo' }));
+
+      expect(screen.getByRole('option', { name: 'Lookup (strani ključ)' })).toBeDisabled();
+    });
+  });
+
+  describe('filter redova', () => {
+    async function openFilterForm(user: ReturnType<typeof userEvent.setup>) {
+      await screen.findByRole('heading', { name: 'Filter redova' });
+      await user.click(screen.getByRole('button', { name: /Dodaj filter/ }));
+    }
+
+    it('bez filtera uvoze se svi redovi', async () => {
+      renderStep();
+      expect(await screen.findByText('Nema filtera — uvoze se svi redovi.')).toBeInTheDocument();
+    });
+
+    it('filter sa više uslova nudi samo mapirane kolone i čuva se', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await openFilterForm(user);
+      expect(screen.getByTestId('uredjuje')).toHaveTextContent('true');
+
+      const columnOptions = within(screen.getByLabelText('Kolona uslova 1')).getAllByRole('option');
+      expect(columnOptions.map((option) => option.textContent)).toEqual(['—', 'Kupac', 'Kolicina', 'Status']);
+
+      await user.selectOptions(screen.getByLabelText('Kolona uslova 1'), 'Status');
+      await user.type(screen.getByLabelText('Vrednost uslova 1'), 'Storno');
+      await user.click(screen.getByRole('button', { name: /^\+ I još uslov/ }));
+      await user.selectOptions(screen.getByLabelText('Kolona uslova 2'), 'Kolicina');
+      await user.selectOptions(screen.getByLabelText('Operator uslova 2'), 'veće od');
+      await user.type(screen.getByLabelText('Vrednost uslova 2'), '10');
+      await user.click(screen.getByRole('radio', { name: 'Preskoči redove koji ispunjavaju uslove' }));
+      await user.click(screen.getByRole('button', { name: 'Sačuvaj filter' }));
+
+      expect(screen.getByText('Preskoči redove gde Status je jednako „Storno" i Kolicina veće od „10"')).toBeInTheDocument();
+      expect(screen.getByTestId('filteri')).toHaveTextContent('1');
+      expect(screen.getByTestId('uredjuje')).toHaveTextContent('false');
+    });
+
+    it('validira uslove i ne čuva nepotpun filter', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await openFilterForm(user);
+      await user.selectOptions(screen.getByLabelText('Kolona uslova 1'), 'Kolicina');
+      await user.type(screen.getByLabelText('Vrednost uslova 1'), 'abc');
+      await user.click(screen.getByRole('button', { name: 'Sačuvaj filter' }));
+      expect(screen.getByRole('alert')).toHaveTextContent('Vrednost mora biti broj.');
+      expect(screen.getByTestId('filteri')).toHaveTextContent('0');
+    });
+
+    it('izmena i brisanje filtera uz potvrdu, uslov se može ukloniti', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await openFilterForm(user);
+      await user.selectOptions(screen.getByLabelText('Operator uslova 1'), 'je prazno');
+      await user.selectOptions(screen.getByLabelText('Kolona uslova 1'), 'Kupac');
+      await user.click(screen.getByRole('button', { name: 'Sačuvaj filter' }));
+      expect(screen.getByText('Uvezi samo redove gde Kupac je prazno')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Izmeni' }));
+      await user.click(screen.getByRole('button', { name: /^\+ I još uslov/ }));
+      await user.click(screen.getByRole('button', { name: 'Ukloni uslov 2' }));
+      expect(screen.queryByLabelText('Kolona uslova 2')).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Otkaži' }));
+
+      await user.click(screen.getByRole('button', { name: /^Ukloni filter/ }));
+      await user.click(screen.getByRole('button', { name: 'Obriši' }));
+      expect(screen.getByTestId('filteri')).toHaveTextContent('0');
+    });
+
+    it('otvoren filter blokira nastavak, a otkazivanje ga vraća', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await openFilterForm(user);
+      expect(screen.getByTestId('uredjuje')).toHaveTextContent('true');
+      expect(screen.queryByRole('button', { name: /Dodaj pravilo/ })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Otkaži' }));
+      expect(screen.getByTestId('uredjuje')).toHaveTextContent('false');
+      expect(screen.getByTestId('filteri')).toHaveTextContent('0');
+    });
   });
 
   it('korak je u čarobnjaku blokiran dok je forma otvorena', () => {

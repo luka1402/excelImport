@@ -1,15 +1,17 @@
 import { useId, useState, type SyntheticEvent } from 'react';
 import { t } from '../../../messages.sr';
 import type {
-  ColumnRule,
   ComparisonOperator,
   ConditionalValueDraft,
   DefaultValueDraft,
+  LookupDraft,
+  RowFilterDraft,
   RuleCondition,
+  RuleDraft,
   TransformDraft,
   TransformKind,
 } from '../../types';
-import type { ColumnInfo } from '../target/targetApi';
+import { qualifiedName, type ColumnInfo, type TableInfo } from '../target/targetApi';
 import {
   emptyCondition,
   operatorLabel,
@@ -23,10 +25,12 @@ import {
 import styles from './rules.module.css';
 
 interface Props {
-  readonly rule: ColumnRule;
+  readonly rule: RuleDraft;
   /** Ciljne kolone po nazivu; koriste se za proveru tipa i za izbor kolone u uslovu. */
   readonly columns: ReadonlyMap<string, ColumnInfo>;
-  readonly onSave: (rule: ColumnRule) => void;
+  /** Tabele učitane šeme; lookup bira samo iz njih. */
+  readonly tables: readonly TableInfo[];
+  readonly onSave: (rule: RuleDraft) => void;
   readonly onCancel: () => void;
 }
 
@@ -141,20 +145,26 @@ function ConditionRow({ index, condition, fields, errors, removable, onChange, o
   );
 }
 
-interface SubFormProps<TRule extends ColumnRule> {
+interface SubFormProps<TRule extends RuleDraft> {
   readonly rule: TRule;
   readonly errors: RuleErrors | null;
   readonly fields: readonly string[];
+  readonly tables: readonly TableInfo[];
   readonly onChange: (rule: TRule) => void;
 }
 
-function ConditionalFields({ rule, errors, fields, onChange }: SubFormProps<ConditionalValueDraft>) {
-  const setCondition = (index: number, condition: RuleCondition) => {
-    onChange({ ...rule, conditions: rule.conditions.map((current, i) => (i === index ? condition : current)) });
-  };
+interface ConditionListProps {
+  readonly conditions: readonly RuleCondition[];
+  readonly errors: RuleErrors | null;
+  readonly fields: readonly string[];
+  readonly onChange: (conditions: readonly RuleCondition[]) => void;
+}
+
+/** Jedan ili više uslova povezanih sa „i"; zajednički za uslovnu vrednost i filter redova. */
+function ConditionList({ conditions, errors, fields, onChange }: ConditionListProps) {
   return (
     <>
-      {rule.conditions.map((condition, index) => (
+      {conditions.map((condition, index) => (
         <ConditionRow
           // Uslovi nemaju identifikator; redosled je jedini ključ, a brisanje ponovo montira redove.
           key={index}
@@ -162,23 +172,153 @@ function ConditionalFields({ rule, errors, fields, onChange }: SubFormProps<Cond
           condition={condition}
           fields={fields}
           errors={errors?.conditions[index]}
-          removable={rule.conditions.length > 1}
+          removable={conditions.length > 1}
           onChange={(updated) => {
-            setCondition(index, updated);
+            onChange(conditions.map((current, i) => (i === index ? updated : current)));
           }}
           onRemove={() => {
-            onChange({ ...rule, conditions: rule.conditions.filter((_, i) => i !== index) });
+            onChange(conditions.filter((_, i) => i !== index));
           }}
         />
       ))}
       <button
         type="button"
         onClick={() => {
-          onChange({ ...rule, conditions: [...rule.conditions, emptyCondition(fields[0] ?? '')] });
+          onChange([...conditions, emptyCondition(fields[0] ?? '')]);
         }}
       >
         + {t('rules.addCondition')}
       </button>
+    </>
+  );
+}
+
+interface SelectFieldProps {
+  readonly label: string;
+  readonly value: string;
+  readonly error: string | undefined;
+  readonly options: readonly { readonly value: string; readonly label: string }[];
+  readonly onChange: (value: string) => void;
+}
+
+function SelectField({ label, value, error, options, onChange }: SelectFieldProps) {
+  const errorId = useId();
+  return (
+    <div className={styles.field}>
+      <label>
+        {label}
+        <select
+          value={value}
+          aria-invalid={error !== undefined}
+          aria-describedby={error === undefined ? undefined : errorId}
+          onChange={(event) => {
+            onChange(event.target.value);
+          }}
+        >
+          <option value="">—</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <FieldError id={errorId} message={error} />
+    </div>
+  );
+}
+
+function LookupFields({ rule, errors, fields, tables, onChange }: SubFormProps<LookupDraft>) {
+  const tableValue = rule.table === '' ? '' : `${rule.schema}.${rule.table}`;
+  const selectedTable = tables.find((table) => table.schema === rule.schema && table.name === rule.table);
+  const columnOptions = (selectedTable?.columns ?? []).map((column) => ({ value: column.name, label: column.name }));
+  const lookupErrors = errors?.lookup;
+  return (
+    <>
+      <SelectField
+        label={t('rules.lookup.sourceField')}
+        value={rule.sourceField}
+        error={lookupErrors?.sourceField}
+        options={fields.map((field) => ({ value: field, label: field }))}
+        onChange={(sourceField) => {
+          onChange({ ...rule, sourceField });
+        }}
+      />
+      <SelectField
+        label={t('rules.lookup.table')}
+        value={tableValue}
+        error={lookupErrors?.table}
+        options={tables.map((table) => ({ value: qualifiedName(table), label: qualifiedName(table) }))}
+        onChange={(qualified) => {
+          const table = tables.find((candidate) => qualifiedName(candidate) === qualified);
+          // Promena tabele poništava kolone, jer pripadaju prethodnoj tabeli.
+          onChange({ ...rule, schema: table?.schema ?? 'dbo', table: table?.name ?? '', keyColumn: '', returnColumn: '' });
+        }}
+      />
+      <SelectField
+        label={t('rules.lookup.keyColumn')}
+        value={rule.keyColumn}
+        error={lookupErrors?.keyColumn}
+        options={columnOptions}
+        onChange={(keyColumn) => {
+          onChange({ ...rule, keyColumn });
+        }}
+      />
+      <SelectField
+        label={t('rules.lookup.returnColumn')}
+        value={rule.returnColumn}
+        error={lookupErrors?.returnColumn}
+        options={columnOptions}
+        onChange={(returnColumn) => {
+          onChange({ ...rule, returnColumn });
+        }}
+      />
+    </>
+  );
+}
+
+function RowFilterFields({ rule, errors, fields, onChange }: SubFormProps<RowFilterDraft>) {
+  return (
+    <>
+      <fieldset>
+        <legend>{t('filters.action')}</legend>
+        {(['include', 'exclude'] as const).map((action) => (
+          <label key={action}>
+            <input
+              type="radio"
+              name="filter-action"
+              checked={rule.action === action}
+              onChange={() => {
+                onChange({ ...rule, action });
+              }}
+            />{' '}
+            {t(action === 'include' ? 'filters.include' : 'filters.exclude')}
+          </label>
+        ))}
+      </fieldset>
+      <ConditionList
+        conditions={rule.conditions}
+        errors={errors}
+        fields={fields}
+        onChange={(conditions) => {
+          onChange({ ...rule, conditions });
+        }}
+      />
+    </>
+  );
+}
+
+function ConditionalFields({ rule, errors, fields, onChange }: SubFormProps<ConditionalValueDraft>) {
+  return (
+    <>
+      <ConditionList
+        conditions={rule.conditions}
+        errors={errors}
+        fields={fields}
+        onChange={(conditions) => {
+          onChange({ ...rule, conditions });
+        }}
+      />
       <TextField
         label={t('rules.thenValue')}
         value={rule.value}
@@ -267,32 +407,33 @@ function TransformFields({ rule, errors, onChange }: SubFormProps<TransformDraft
   );
 }
 
-export function RuleForm({ rule: initial, columns, onSave, onCancel }: Props) {
-  const [rule, setRule] = useState<ColumnRule>(initial);
+export function RuleForm({ rule: initial, columns, tables, onSave, onCancel }: Props) {
+  const [rule, setRule] = useState<RuleDraft>(initial);
   const [submitted, setSubmitted] = useState(false);
-  const errors = submitted ? validateRule(rule, columns) : null;
+  const errors = submitted ? validateRule(rule, columns, tables) : null;
   const fields = [...columns.keys()];
+  const common = { errors, fields, tables };
 
   const submit = (event: SyntheticEvent) => {
     event.preventDefault();
     setSubmitted(true);
-    if (!validateRule(rule, columns).hasErrors) {
+    if (!validateRule(rule, columns, tables).hasErrors) {
       onSave(rule);
     }
   };
 
   return (
     <form noValidate onSubmit={submit} className={styles.form}>
-      {rule.type === 'conditionalValue' && (
-        <ConditionalFields rule={rule} errors={errors} fields={fields} onChange={setRule} />
-      )}
-      {rule.type === 'defaultValue' && <DefaultFields rule={rule} errors={errors} fields={fields} onChange={setRule} />}
-      {rule.type === 'transform' && <TransformFields rule={rule} errors={errors} fields={fields} onChange={setRule} />}
+      {rule.type === 'conditionalValue' && <ConditionalFields rule={rule} {...common} onChange={setRule} />}
+      {rule.type === 'defaultValue' && <DefaultFields rule={rule} {...common} onChange={setRule} />}
+      {rule.type === 'transform' && <TransformFields rule={rule} {...common} onChange={setRule} />}
+      {rule.type === 'lookup' && <LookupFields rule={rule} {...common} onChange={setRule} />}
+      {rule.type === 'rowFilter' && <RowFilterFields rule={rule} {...common} onChange={setRule} />}
       <div className={styles.actions}>
         <button type="button" onClick={onCancel}>
           {t('rules.cancel')}
         </button>
-        <button type="submit">{t('rules.save')}</button>
+        <button type="submit">{t(rule.type === 'rowFilter' ? 'filters.save' : 'rules.save')}</button>
       </div>
     </form>
   );

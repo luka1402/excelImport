@@ -30,6 +30,8 @@ export interface WizardData {
   readonly mappingComplete: boolean;
   /** Pravila po ciljnoj koloni, redosledom unosa; brišu se kada se mapiranje napravi iznova. */
   readonly rules: readonly ColumnRule[];
+  /** Filteri redova; svi moraju biti zadovoljeni da bi red bio uvezen. Brišu se zajedno sa pravilima. */
+  readonly rowFilters: readonly RowFilterDraft[];
   /** Forma pravila je otvorena (nova ili izmena); blokira nastavak dok se ne sačuva ili otkaže. */
   readonly rulesEditing: boolean;
 }
@@ -82,7 +84,30 @@ export interface TransformDraft extends RuleBase {
   readonly separator: ',' | '.' | '';
 }
 
-export type ColumnRule = ConditionalValueDraft | DefaultValueDraft | TransformDraft;
+/** Vrednost izvorne kolone traži se u ključnoj koloni tabele ciljne baze; upisuje se povratna kolona. */
+export interface LookupDraft extends RuleBase {
+  readonly type: 'lookup';
+  /** Mapirana kolona čija se vrednost traži. */
+  readonly sourceField: string;
+  readonly schema: string;
+  readonly table: string;
+  readonly keyColumn: string;
+  readonly returnColumn: string;
+}
+
+export type ColumnRule = ConditionalValueDraft | DefaultValueDraft | TransformDraft | LookupDraft;
+
+export type RowFilterAction = 'include' | 'exclude';
+
+/** Filter nije vezan za jednu kolonu: uključuje ili isključuje redove čiji su svi uslovi ispunjeni. */
+export interface RowFilterDraft {
+  readonly id: string;
+  readonly type: 'rowFilter';
+  readonly action: RowFilterAction;
+  readonly conditions: readonly RuleCondition[];
+}
+
+export type RuleDraft = ColumnRule | RowFilterDraft;
 
 export interface MappingChoice {
   readonly target: string;
@@ -112,6 +137,7 @@ export const initialWizardData: WizardData = {
   mappingKey: '',
   mappingComplete: false,
   rules: [],
+  rowFilters: [],
   rulesEditing: false,
 };
 

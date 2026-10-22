@@ -1,5 +1,5 @@
-import type { ColumnRule } from '../../types';
-import type { ColumnInfo } from '../target/targetApi';
+import type { ColumnRule, LookupDraft, RowFilterDraft } from '../../types';
+import type { ColumnInfo, TableInfo } from '../target/targetApi';
 import { describeRule, isDateFormatValid, operatorNeedsValue, operators, validateRule } from './rulesLogic';
 
 function column(name: string, dataType: string, maxLength: number | null = null): ColumnInfo {
@@ -88,6 +88,66 @@ describe('validateRule', () => {
   it('trim/upper/lower nemaju dodatna polja za proveru', () => {
     const rule: ColumnRule = { id: '6', type: 'transform', targetField: 'Kupac', kind: 'upper', format: '', separator: '' };
     expect(validateRule(rule, columns).hasErrors).toBe(false);
+  });
+});
+
+describe('lookup i filter redova', () => {
+  const tables: TableInfo[] = [
+    {
+      schema: 'dbo',
+      name: 'Grad',
+      columns: [column('Id', 'int'), column('Naziv', 'nvarchar', 50)],
+      primaryKey: ['Id'],
+      foreignKeys: [],
+    },
+  ];
+  const lookup = (overrides: Partial<LookupDraft> = {}): LookupDraft => ({
+    id: '7',
+    type: 'lookup',
+    targetField: 'Kolicina',
+    sourceField: 'Kupac',
+    schema: 'dbo',
+    table: 'Grad',
+    keyColumn: 'Naziv',
+    returnColumn: 'Id',
+    ...overrides,
+  });
+
+  it('ispravan lookup nema grešaka', () => {
+    expect(validateRule(lookup(), columns, tables).hasErrors).toBe(false);
+  });
+
+  it('traži izbor tabele i kolona', () => {
+    const errors = validateRule(lookup({ sourceField: '', table: '', keyColumn: '', returnColumn: '' }), columns, tables);
+    expect(errors.lookup).toEqual({
+      sourceField: 'Izaberite kolonu.',
+      table: 'Izaberite tabelu.',
+      keyColumn: 'Izaberite ključnu kolonu.',
+      returnColumn: 'Izaberite povratnu kolonu.',
+    });
+  });
+
+  it('odbija tabelu i kolone koje ne postoje u šemi', () => {
+    expect(validateRule(lookup({ table: 'Nema' }), columns, tables).lookup.table).toBe('Tabela više ne postoji u šemi baze.');
+    expect(validateRule(lookup({ keyColumn: 'Nema' }), columns, tables).lookup.keyColumn).toBe(
+      'Kolona ne postoji u izabranoj tabeli.',
+    );
+  });
+
+  it('filter traži bar jedan ispravan uslov i opisuje se rečenicom', () => {
+    const filter: RowFilterDraft = {
+      id: '8',
+      type: 'rowFilter',
+      action: 'exclude',
+      conditions: [
+        { field: 'Kolicina', operator: 'lt', value: '1' },
+        { field: 'Kupac', operator: 'isEmpty', value: '' },
+      ],
+    };
+    expect(validateRule(filter, columns).hasErrors).toBe(false);
+    expect(describeRule(filter)).toBe('Preskoči redove gde Kolicina manje od „1" i Kupac je prazno');
+    expect(describeRule({ ...filter, action: 'include' })).toMatch(/^Uvezi samo redove gde /);
+    expect(validateRule({ ...filter, conditions: [{ field: '', operator: 'eq', value: '' }] }, columns).hasErrors).toBe(true);
   });
 });
 
