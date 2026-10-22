@@ -1,5 +1,6 @@
 ﻿import type { WizardStepDefinition } from '../types';
 import { PlaceholderStep } from './PlaceholderStep';
+import { TargetStep } from './target/TargetStep';
 
 export const wizardSteps: readonly WizardStepDefinition[] = [
   {
@@ -21,7 +22,9 @@ export const wizardSteps: readonly WizardStepDefinition[] = [
     titleKey: 'step.target.title',
     navLabelKey: 'step.target.nav',
     hintKey: 'step.target.hint',
-    Component: PlaceholderStep,
+    Component: TargetStep,
+    isValid: (data) => data.connectionId !== '' && data.table !== '',
+    disabledReasonKey: 'nav.disabledReason.target',
   },
   {
     slug: 'mapiranje',

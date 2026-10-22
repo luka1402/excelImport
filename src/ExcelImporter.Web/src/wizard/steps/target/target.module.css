@@ -1,0 +1,35 @@
+.fields {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.75rem 1rem;
+  align-items: start;
+  max-width: 40rem;
+}
+
+.fields select,
+.fields input {
+  width: 100%;
+}
+
+.columns {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.columns caption {
+  text-align: left;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.columns th,
+.columns td {
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.note {
+  color: var(--color-muted);
+}

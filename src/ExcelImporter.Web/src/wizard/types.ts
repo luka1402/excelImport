@@ -8,10 +8,12 @@ import type { MessageKey } from '../messages.sr';
 export interface WizardData {
   readonly fileName: string;
   readonly sheet: string;
+  readonly connectionId: string;
+  readonly tableSchema: string;
   readonly table: string;
 }
 
-export const initialWizardData: WizardData = { fileName: '', sheet: '', table: '' };
+export const initialWizardData: WizardData = { fileName: '', sheet: '', connectionId: '', tableSchema: '', table: '' };
 
 export interface WizardStepDefinition {
   /** Segment u URL-u: /uvoz/:slug */

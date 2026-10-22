@@ -14,6 +14,10 @@ function renderApp(path: string) {
   return router;
 }
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe('aplikacija sa pravim rutama i koracima', () => {
   it('koren preusmerava na prvi korak', async () => {
     const router = renderApp('/');
@@ -23,10 +27,24 @@ describe('aplikacija sa pravim rutama i koracima', () => {
 
   it('prolazi svih 7 koraka napred i nazad (uključujući korak sa dijakritikom u URL-u)', async () => {
     const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>((input) =>
+        Promise.resolve(
+          input === '/api/connections'
+            ? Response.json([{ id: 1, displayName: 'Demo baza' }])
+            : Response.json({ tables: [{ schema: 'dbo', name: 'Prodaja', columns: [], primaryKey: [], foreignKeys: [] }] }),
+        ),
+      ),
+    );
     const router = renderApp('/uvoz/fajl');
     await screen.findByRole('heading', { level: 1 });
 
     for (let i = 0; i < 6; i++) {
+      if (decodeURIComponent(router.state.location.pathname) === '/uvoz/odredište') {
+        await user.selectOptions(await screen.findByLabelText('Baza'), 'Demo baza');
+        await user.selectOptions(await screen.findByLabelText('Tabela'), 'dbo.Prodaja');
+      }
       await user.click(screen.getByRole('button', { name: /Dalje/ }));
     }
     expect(screen.queryByRole('button', { name: /Dalje/ })).not.toBeInTheDocument();
