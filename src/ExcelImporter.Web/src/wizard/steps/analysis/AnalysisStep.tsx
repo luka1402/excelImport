@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { t } from '../../../messages.sr';
 import { EmptyState, ErrorState, LoadingState } from '../../../ui/states';
 import { useWizard } from '../../WizardContext';
+import { TemplatePicker } from '../../templates/TemplatePicker';
 import { ColumnsTable } from './ColumnsTable';
 import { HeaderRowControl } from './HeaderRowControl';
 import { PreviewTable } from './PreviewTable';
@@ -120,6 +121,7 @@ export function AnalysisStep() {
               />
             </>
           )}
+          {usable && <TemplatePicker />}
         </>
       )}
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { t, type MessageKey } from '../../../messages.sr';
 import { EmptyState, ErrorState, LoadingState } from '../../../ui/states';
 import { useWizard } from '../../WizardContext';
+import { SaveTemplateSection } from '../../templates/SaveTemplateSection';
 import type { ColumnRule, RuleDraft } from '../../types';
 import { useDatabaseSchema, type ColumnInfo } from '../target/targetApi';
 import { RuleForm } from './RuleForm';
@@ -248,6 +249,7 @@ export function RulesStep() {
         onSave={save}
         onRemove={removeFilter}
       />
+      <SaveTemplateSection />
     </>
   );
 }

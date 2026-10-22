@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect, type ReactNode } from 'react';
@@ -54,15 +55,19 @@ function Probe() {
 }
 
 function renderStep() {
+  vi.stubGlobal('fetch', vi.fn<typeof fetch>(() => Promise.resolve(Response.json([]))));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter>
-      <WizardProvider>
-        <Seed>
-          <AnalysisStep />
-          <Probe />
-        </Seed>
-      </WizardProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <WizardProvider>
+          <Seed>
+            <AnalysisStep />
+            <Probe />
+          </Seed>
+        </WizardProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

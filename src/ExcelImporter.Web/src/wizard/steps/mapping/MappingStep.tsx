@@ -9,7 +9,8 @@ import { useFileAnalysis } from '../analysis/useFileAnalysis';
 import { useDatabaseSchema, type ColumnInfo, type TableInfo } from '../target/targetApi';
 import { ConstantsSection } from './ConstantsSection';
 import { MappingRow } from './MappingRow';
-import { evaluateMapping, suggestMapping } from './mappingLogic';
+import { evaluateMapping, mappingKeyOf, suggestMapping } from './mappingLogic';
+import { TemplateWarning } from '../../templates/TemplateWarning';
 import styles from './mapping.module.css';
 
 /** Kolone sa nazivom; mapiranje ide po nazivu, pa se ponovljeni naziv uzima jednom. */
@@ -43,7 +44,7 @@ export function MappingStep() {
   const table: TableInfo | undefined = schema.data?.tables.find(
     (candidate) => candidate.schema === data.tableSchema && candidate.name === data.table,
   );
-  const key = [data.fileId, data.sheetIndex, data.headerRowIndex, data.connectionId, data.tableSchema, data.table].join('|');
+  const key = mappingKeyOf(data);
   const initialized = data.mappingKey === key;
 
   // Promena fajla, sheet-a, header-a ili tabele poništava mapiranje i pravi novi predlog.
@@ -55,7 +56,7 @@ export function MappingStep() {
     for (const suggestion of suggestMapping(columns, table)) {
       mapping[suggestion.sourceColumn] = { target: suggestion.targetColumn, suggested: true };
     }
-    updateData({ mapping, constants: {}, rules: [], rowFilters: [], rulesEditing: false, mappingKey: key });
+    updateData({ mapping, constants: {}, rules: [], rowFilters: [], rulesEditing: false, appliedTemplate: null, mappingKey: key });
   }, [columns, table, initialized, key, updateData]);
 
   const evaluation = useMemo(
@@ -114,6 +115,7 @@ export function MappingStep() {
 
   return (
     <div>
+      {data.appliedTemplate && <TemplateWarning template={data.appliedTemplate} />}
       {suggestedCount > 0 && (
         <div role="status" className={styles.banner}>
           <span>✔ {t('mapping.suggested', { n: suggestedCount, total: columns.length })}</span>

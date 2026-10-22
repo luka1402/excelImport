@@ -65,6 +65,18 @@ function similarity(left: string, right: string): number {
   return 1 - levenshtein(left, right) / Math.max(left.length, right.length);
 }
 
+/** Ulazi za koje je mapiranje napravljeno; kada se promene, predlog se pravi iznova. */
+export function mappingKeyOf(data: {
+  readonly fileId: string;
+  readonly sheetIndex: number | null;
+  readonly headerRowIndex: number | null;
+  readonly connectionId: string;
+  readonly tableSchema: string;
+  readonly table: string;
+}): string {
+  return [data.fileId, data.sheetIndex, data.headerRowIndex, data.connectionId, data.tableSchema, data.table].join('|');
+}
+
 export interface Suggestion {
   readonly sourceColumn: string;
   readonly targetColumn: string;

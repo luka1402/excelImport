@@ -34,6 +34,17 @@ export interface WizardData {
   readonly rowFilters: readonly RowFilterDraft[];
   /** Forma pravila je otvorena (nova ili izmena); blokira nastavak dok se ne sačuva ili otkaže. */
   readonly rulesEditing: boolean;
+  /** Šablon primenjen na ovaj fajl; null kada mapiranje nije iz šablona. */
+  readonly appliedTemplate: AppliedTemplate | null;
+}
+
+export interface AppliedTemplate {
+  readonly id: number;
+  readonly name: string;
+  /** Kolone fajla kojih nije bilo u fajlu iz kog je šablon nastao. */
+  readonly newColumns: readonly string[];
+  /** Kolone iz šablona kojih nema u ovom fajlu; njihova mapiranja nisu primenjena. */
+  readonly missingColumns: readonly string[];
 }
 
 /** Nazivi prate ComparisonOperator i TransformKind na serveru (JSON vrednosti). */
@@ -139,6 +150,7 @@ export const initialWizardData: WizardData = {
   rules: [],
   rowFilters: [],
   rulesEditing: false,
+  appliedTemplate: null,
 };
 
 export interface WizardStepDefinition {
